@@ -1,10 +1,5 @@
-<div style="text-align: center; margin: 20px 0;">
-    <div style="font-size: 35px; font-weight: 200; text-shadow: 3px 2px 3px rgba(0, 0, 0, 0.7)">TINY RASTERIZER</div>
-    <div style="color: #999; font-size: 12px; font-weight: 800; margin-bottom: 15px">A full featured rasterizer</div>
-    <div>
-    <img alt="GitHub" src="https://img.shields.io/github/license/hyiker/tiny_rasterizer?style=flat-square">
-    </div>
-</div>
+<p align="center"><img alt="title" src="https://hcti.io/v1/image/34cca40e-bd4b-44ec-ad18-29f7656c4c1e"></p>
+<p align="center"><img alt="GitHub" src="https://img.shields.io/github/license/Hyiker/tiny_rasterizer?style=flat-square"></p>
 
 ## Introduction
 
