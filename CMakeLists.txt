@@ -3,10 +3,8 @@ project(tiny_rasterizer)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Eigen3 REQUIRED)
+include_directories(./)
 
-include_directories(${EIGEN3_INCLUDE_DIRS})
-
-set(SOURCE_FILES src/main.cc)
+set(SOURCE_FILES main.cc rasterizer/Scene.hpp rasterizer/Camera.hpp rasterizer/Triangle.hpp rasterizer/Math.hpp)
 
 add_executable(rasterizer ${SOURCE_FILES})
