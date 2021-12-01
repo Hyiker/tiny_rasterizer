@@ -6,10 +6,13 @@
 #define DEG2RAD(d) ((d) / 180 * M_PI)
 namespace Rasterizer {
 
+// each color portion regularized to [0, 1]
+class Vec3;
+using RGBColor = Vec3;
 class Vec4 {
    public:
     float x, y, z, w;
-    Vec4() = default;
+    Vec4() : x{0.0f}, y{0.0f}, z{0.0f}, w{0.0f} {};
     Vec4(float x, float y, float z, float w) : x{x}, y{y}, z{z}, w{w} {}
 };
 
@@ -30,7 +33,11 @@ class Mat4 {
 
    public:
     std::array<std::array<float, 4>, 4> m;
-    Mat4() = default;
+    Mat4() {
+        for (int i = 0; i < 4; i++) {
+            m[i].fill(0);
+        }
+    };
 
     template <typename N>
     MatProxy operator<<(N number) {
@@ -39,12 +46,17 @@ class Mat4 {
     }
     Vec4 operator*(const Vec4& vec) const {
         Vec4 result;
-        for (int i = 0; i < 4; i++) {
-            result.x += vec.x * m[0][i];
-            result.y += vec.y * m[1][i];
-            result.z += vec.z * m[2][i];
-            result.w += vec.w * m[3][i];
-        }
+        result.x = m[0][0] * vec.x + m[0][1] * vec.y + m[0][2] * vec.z +
+                   m[0][3] * vec.w;
+
+        result.y = m[1][0] * vec.x + m[1][1] * vec.y + m[1][2] * vec.z +
+                   m[1][3] * vec.w;
+
+        result.z = m[2][0] * vec.x + m[2][1] * vec.y + m[2][2] * vec.z +
+                   m[2][3] * vec.w;
+
+        result.w = m[3][0] * vec.x + m[3][1] * vec.y + m[3][2] * vec.z +
+                   m[3][3] * vec.w;
         return std::move(result);
     }
     Mat4 operator*(const Mat4& mat) const {
@@ -57,6 +69,11 @@ class Mat4 {
             }
         }
         return std::move(result);
+    }
+    static Mat4 identity() {
+        Mat4 mat;
+        mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
+        return std::move(mat);
     }
 };
 class Vec3 {
@@ -88,7 +105,14 @@ class Vec3 {
     Vec3 operator-(const Vec3& v) const {
         return Vec3(x - v.x, y - v.y, z - v.z);
     }
-    Vec4 toVec4() const { return Vec4(x, y, z, 0); }
+    Vec4 toVec4() const { return Vec4(x, y, z, 1); }
+    RGBColor rgbNormalized() const { return (*this) / 255.0f; }
+    RGBColor& rgbNormalize() {
+        x /= 255.0f;
+        y /= 255.0f;
+        z /= 255.0f;
+        return *this;
+    }
 
     friend Vec3 operator*(float, const Vec3&);
     friend Vec3 operator*(const Vec3&, float);
@@ -102,7 +126,7 @@ Vec3 operator*(const Vec3& v, float coe) {
 }
 Vec3 operator/(const Vec3& v, float coe) {
     coe = 1 / coe;
-    return Vec3(v.x * coe, v.y * coe, v.z * coe);
+    return coe * Vec3(v.x, v.y, v.z);
 }
 std::ostream& operator<<(std::ostream& os, const Vec3& v) {
     os << "(" << v.x << ", " << v.y << ", " << v.z << ")";

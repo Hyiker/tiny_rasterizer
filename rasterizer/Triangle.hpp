@@ -2,27 +2,68 @@
 #define TRIANGLE_HPP
 
 #include <array>
+#include <tuple>
 
 #include "rasterizer/Math.hpp"
 namespace Rasterizer {
-using RGBColor = Vec3;
+class Vertex {
+   public:
+    Vec3 coord;
+    RGBColor color;
+    Vec3 normal;
+    Vertex(const Vec3& coord = Vec3(0, 0, 0),
+           const RGBColor& color = RGBColor(1.0, 1.0, 1.0),
+           const Vec3& normal = Vec3(0, 0, 1))
+        : coord{coord}, color{color}, normal{normal} {}
+};
 class Triangle {
    public:
-    std::array<Vec3, 3> v;
-    std::array<RGBColor, 3> vertex_color;
-    std::array<Vec3, 3> vertex_normal;
+    std::array<Vertex, 3> v;
     Triangle() = default;
-    Triangle(const std::array<Rasterizer::Vec3, 3>& v) : v{v} {}
-    bool inside(const Rasterizer::Vec3& p) {
+    Triangle(const std::array<Vertex, 3>& v) : v{v} {}
+    bool inside(const Rasterizer::Vec3& p, bool remove_z = true) const {
         // get 3 edge vector and point-vertex vector
-        Rasterizer::Vec3 e1 = v[0] - v[1], e2 = v[1] - v[2], e3 = v[2] - v[0],
-                         e4 = p - v[0];
+        Rasterizer::Vec3 e1 = v[0].coord - p, e2 = v[1].coord - p,
+                         e3 = v[2].coord - p;
+        if (remove_z) {
+            e1.z = e2.z = e3.z = 0.0f;
+        }
         // cross product pv & edges
-        Rasterizer::Vec3 c1 = e1.cross(e4), c2 = e2.cross(e4),
-                         c3 = e3.cross(e4);
-        float d1 = c1.dot(c2), d2 = c2.dot(c3), d3 = c3.dot(c1);
+        Rasterizer::Vec3 c1 = e1.cross(e2), c2 = e2.cross(e3),
+                         c3 = e3.cross(e1);
+        float d1 = c1.z, d2 = c2.z, d3 = c3.z;
         return (d1 >= 0 && d2 >= 0 && d3 >= 0) ||
                (d1 <= 0 && d2 <= 0 && d3 <= 0);
+    }
+    std::tuple<float, float, float> computeBarycentric2D(float x,
+                                                         float y) const {
+        float c1 = (x * (v[1].coord.y - v[2].coord.y) +
+                    (v[2].coord.x - v[1].coord.x) * y +
+                    v[1].coord.x * v[2].coord.y - v[2].coord.x * v[1].coord.y) /
+                   (v[0].coord.x * (v[1].coord.y - v[2].coord.y) +
+                    (v[2].coord.x - v[1].coord.x) * v[0].coord.y +
+                    v[1].coord.x * v[2].coord.y - v[2].coord.x * v[1].coord.y);
+        float c2 = (x * (v[2].coord.y - v[0].coord.y) +
+                    (v[0].coord.x - v[2].coord.x) * y +
+                    v[2].coord.x * v[0].coord.y - v[0].coord.x * v[2].coord.y) /
+                   (v[1].coord.x * (v[2].coord.y - v[0].coord.y) +
+                    (v[0].coord.x - v[2].coord.x) * v[1].coord.y +
+                    v[2].coord.x * v[0].coord.y - v[0].coord.x * v[2].coord.y);
+        float c3 = (x * (v[0].coord.y - v[1].coord.y) +
+                    (v[1].coord.x - v[0].coord.x) * y +
+                    v[0].coord.x * v[1].coord.y - v[1].coord.x * v[0].coord.y) /
+                   (v[2].coord.x * (v[0].coord.y - v[1].coord.y) +
+                    (v[1].coord.x - v[0].coord.x) * v[2].coord.y +
+                    v[0].coord.x * v[1].coord.y - v[1].coord.x * v[0].coord.y);
+        return {c1, c2, c3};
+    }
+    float interpolateZ(float u, float v, float w) const {
+        return this->v[0].coord.z * u + this->v[1].coord.z * v +
+               this->v[2].coord.z * w;
+    }
+    RGBColor getColor(float u, float v, float w) const {
+        return this->v[0].color * u + this->v[1].color * v +
+               this->v[2].color * w;
     }
 };
 

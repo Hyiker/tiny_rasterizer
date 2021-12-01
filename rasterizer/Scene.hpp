@@ -2,6 +2,7 @@
 #define SCENE_HPP
 #include <cmath>
 #include <fstream>
+#include <limits>
 #include <vector>
 
 #include "rasterizer/Math.hpp"
@@ -13,45 +14,65 @@ class Scene {
     // remove triangles unvisible to camera
     // TODO: remove by vertices
     std::vector<Triangle*> triangleExclusion() { return {}; }
-    Mat4 getProjectionMatrix(float near, float far) {
-        Mat4 projection;
-        float fov_rad = DEG2RAD(cam.fov);
-        float h = 2.0f * near * std::tan(fov_rad * 0.5f);
-        float w = h * cam.aspect_ratio;
-        projection << 2 * near / w, 0, 0, 0, 0, 2 * near / h, 0, 0, 0, 0,
-            (near + far) / (near - far), 2 * far * near / (far - near), 0, 0, 1,
-            0;
-        return projection;
-    }
-    Mat4 getViewMatrix() {
-        Mat4 view;
-        view << 1, 0, 0, -cam.eye_pos.x, 0, 1, 0, -cam.eye_pos.y, 0, 0, 1,
-            -cam.eye_pos.z, 0, 0, 0, 1;
-        return std::move(view);
-    }
     Mat4 getTransformMatrix() {
-        Mat4 proj_mat = getProjectionMatrix(0.1, 50);
-        Mat4 view_mat = getViewMatrix();
-        return proj_mat * view_mat;
+        // TODO: implement real model transformation
+        Mat4 model_mat = Mat4::identity();
+        Mat4 proj_mat = cam.getProjectionMatrix();
+        Mat4 view_mat = cam.getViewMatrix();
+        return proj_mat * view_mat * model_mat;
     }
 
    public:
     Camera cam;
-    std::array<std::array<Vec3, width>, height> pixels;
+    std::array<std::array<RGBColor, width>, height> pixels;
+    std::array<std::array<float, width>, height> zbuffer;
     std::vector<Triangle*> triangles;
 
     // defaultly, look from 0, 0, 5 along the negative z axis
-    Scene() : cam(45, 4.0f / 3.0f, Vec3(0, 0, 5)) {}
+    Scene() {
+        for (int i = 0; i < height; i++) {
+            pixels[i].fill(RGBColor(0, 0, 0));
+            zbuffer[i].fill(std::numeric_limits<float>::infinity());
+        }
+    }
     void render() {
         // triangles with unvisible triangles excluded
         // auto triangles = triangleExclusion();
 
         Mat4 proj_mat = getTransformMatrix();
+        std::vector<Triangle> transformed_triangles;
         for (const auto triangle : triangles) {
-            std::array<Vec3, 3>& vertices = triangle->v;
+            std::array<Vertex, 3>& vertices = triangle->v;
+            std::array<Vertex, 3> t_vertices;
             for (int i = 0; i < 3; i++) {
-                Vec3 transformed(proj_mat * vertices[i].toVec4());
-                std::cout << transformed << '\n';
+                Vec3 transformed(proj_mat * vertices[i].coord.toVec4());
+                std::cout << transformed << std::endl;
+                t_vertices[i].coord = std::move(transformed);
+                t_vertices[i].color = vertices[i].color;
+            }
+            // for each triangle, check if pixel is inside
+            Triangle t_tri(t_vertices);
+            this->draw(t_tri);
+        }
+    }
+    Vec3 screenCoordToViewCoord(float u, float v) {
+        return Vec3((u - 0.5 * width) / width * cam.width,
+                    (v - 0.5 * height) / height * cam.width, 0.0f);
+    }
+    void draw(const Triangle& triangle) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                auto coord =
+                    screenCoordToViewCoord(float(x) + 0.5f, float(y) + 0.5f);
+                if (triangle.inside(coord)) {
+                    auto [u, v, w] =
+                        triangle.computeBarycentric2D(coord.x, coord.y);
+                    coord.z = triangle.interpolateZ(u, v, w);
+                    if (coord.z < zbuffer[y][x]) {
+                        pixels[y][x] = triangle.getColor(u, v, w);
+                        zbuffer[y][x] = coord.z;
+                    }
+                }
             }
         }
     }
@@ -68,12 +89,11 @@ class Scene {
         for (auto& row : pixels) {
             for (auto& pixel : row) {
                 Vec3 p255 = pixel * 255.0f;
-                int x = p255.x, y = p255.y, z = p255.z;
-                ofs.write((const char*)&x, 1);
-                ofs.write((const char*)&y, 1);
-                ofs.write((const char*)&z, 1);
+                char x = p255.x, y = p255.y, z = p255.z;
+                ofs.write(&x, 1);
+                ofs.write(&y, 1);
+                ofs.write(&z, 1);
             }
-            ofs.write("\n", 1);
         }
         ofs.flush();
         ofs.close();
