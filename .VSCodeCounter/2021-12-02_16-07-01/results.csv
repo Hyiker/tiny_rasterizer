@@ -1,0 +1,10 @@
+"filename", "language", "C++", "Markdown", "comment", "blank", "total"
+"/Users/sidicefhh/Projects/tiny_rasterizer/README.md", "Markdown", 0, 10, 0, 7, 17
+"/Users/sidicefhh/Projects/tiny_rasterizer/main.cc", "C++", 21, 0, 12, 5, 38
+"/Users/sidicefhh/Projects/tiny_rasterizer/rasterizer/Camera.hpp", "C++", 49, 0, 2, 3, 54
+"/Users/sidicefhh/Projects/tiny_rasterizer/rasterizer/Math.hpp", "C++", 153, 0, 1, 10, 164
+"/Users/sidicefhh/Projects/tiny_rasterizer/rasterizer/Scene.hpp", "C++", 100, 0, 7, 7, 114
+"/Users/sidicefhh/Projects/tiny_rasterizer/rasterizer/Triangle.hpp", "C++", 66, 0, 2, 5, 73
+"/Users/sidicefhh/Projects/tiny_rasterizer/utils/ObjParser.hpp", "C++", 82, 0, 2, 4, 88
+"/Users/sidicefhh/Projects/tiny_rasterizer/window/Window.hpp", "C++", 44, 0, 2, 4, 50
+"Total", "-", 515, 10, 28, 45, 598

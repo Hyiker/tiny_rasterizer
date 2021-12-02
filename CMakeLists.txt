@@ -7,7 +7,7 @@ include_directories(./)
 
 find_package(glfw3 3.3 REQUIRED)
 
-set(SOURCE_FILES main.cc rasterizer/Scene.hpp rasterizer/Camera.hpp rasterizer/Triangle.hpp rasterizer/Math.hpp window/Window.hpp)
+set(SOURCE_FILES main.cc utils/ObjParser.hpp rasterizer/Scene.hpp rasterizer/Camera.hpp rasterizer/Triangle.hpp rasterizer/Math.hpp window/Window.hpp)
 
 add_executable(rasterizer ${SOURCE_FILES})
 target_link_libraries(rasterizer glfw)

@@ -12,7 +12,7 @@ class Vertex {
     RGBColor color;
     Vec3 normal;
     Vertex(const Vec3& coord = Vec3(0, 0, 0),
-           const RGBColor& color = RGBColor(1.0, 1.0, 1.0),
+           const RGBColor& color = RGBColor(1.0),
            const Vec3& normal = Vec3(0, 0, 1))
         : coord{coord}, color{color}, normal{normal} {}
 };

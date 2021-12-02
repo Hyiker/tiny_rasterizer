@@ -80,6 +80,7 @@ class Vec3 {
    public:
     float x, y, z;
     Vec3() : x{0.0f}, y{0.0f}, z{0.0f} {}
+    Vec3(float v) : Vec3(v, v, v) {}
     Vec3(float x, float y, float z) : x{x}, y{y}, z{z} {}
     Vec3(const Vec4& v4) : x{v4.x}, y{v4.y}, z{v4.z} {}
     float dot(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
@@ -105,6 +106,9 @@ class Vec3 {
     Vec3 operator-(const Vec3& v) const {
         return Vec3(x - v.x, y - v.y, z - v.z);
     }
+    Vec3 operator-() const { return Vec3(-x, -y, -z); }
+    Vec3 sin() const { return Vec3(std::sin(x), std::sin(y), std::sin(z)); }
+    Vec3 cos() const { return Vec3(std::cos(x), std::cos(y), std::cos(z)); }
     Vec4 toVec4() const { return Vec4(x, y, z, 1); }
     RGBColor rgbNormalized() const { return (*this) / 255.0f; }
     RGBColor& rgbNormalize() {
@@ -150,4 +154,10 @@ std::ostream& operator<<(std::ostream& os, const Mat4& mat) {
 }
 }  // namespace Rasterizer
 
+namespace math {
+template <typename T>
+T clamp(T val, T f, T c) {
+    return std::max(f, std::min(val, c));
+}
+}  // namespace math
 #endif /* MATH_HPP */
