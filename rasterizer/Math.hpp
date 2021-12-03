@@ -70,6 +70,75 @@ class Mat4 {
         }
         return std::move(result);
     }
+    Mat4 operator/(float div) const {
+        Mat4 result;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                result.m[i][j] = this->m[i][j] / div;
+            }
+        }
+        return result;
+    }
+    Mat4 cfactor(int p, int q, int n = 4) const {
+        Mat4 mat;
+        int i = 0, j = 0;
+        for (int r = 0; r < n; r++) {
+            for (int c = 0; c < n; c++) {
+                if (r != p && c != q) {
+                    mat.m[i][j++] = this->m[r][c];
+                    if (j == n - 1) {
+                        j = 0;
+                        i++;
+                    }
+                }
+            }
+        }
+        return std::move(mat);
+    }
+    float determinant(int n = 4) const {
+        float d = 0.0;
+        if (n == 1) {
+            return this->m[0][0];
+        }
+        float s = 1;
+        for (int f = 0; f < n; f++) {
+            Mat4 t = this->cfactor(0, f);
+            d += s * this->m[0][f] * t.determinant(n - 1);
+            s = -s;
+        }
+        return d;
+    }
+    Mat4 adjoint() const {
+        Mat4 mat;
+        float s = 1;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                Mat4 t = this->cfactor(i, j);
+                s = ((i + j) & 1) == 0 ? 1.0 : -1.0;
+                mat.m[j][i] = s * t.determinant(3);
+            }
+        }
+        return std::move(mat);
+    }
+    Mat4 inverse() const {
+        float det = this->determinant();
+        if (det == 0.0) {
+            // bad inverse
+            return Mat4::identity();
+        }
+        Mat4 adj = this->adjoint();
+        return adj / det;
+    }
+
+    Mat4 transpose() const {
+        Mat4 mat;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mat.m[i][j] = this->m[j][i];
+            }
+        }
+        return std::move(mat);
+    }
     static Mat4 identity() {
         Mat4 mat;
         mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
@@ -109,7 +178,7 @@ class Vec3 {
     Vec3 operator-() const { return Vec3(-x, -y, -z); }
     Vec3 sin() const { return Vec3(std::sin(x), std::sin(y), std::sin(z)); }
     Vec3 cos() const { return Vec3(std::cos(x), std::cos(y), std::cos(z)); }
-    Vec4 toVec4() const { return Vec4(x, y, z, 1); }
+    Vec4 toVec4(float w = 1.0f) const { return Vec4(x, y, z, w); }
     RGBColor rgbNormalized() const { return (*this) / 255.0f; }
     RGBColor& rgbNormalize() {
         x /= 255.0f;

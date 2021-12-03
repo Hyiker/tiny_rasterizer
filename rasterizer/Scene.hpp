@@ -43,59 +43,66 @@ class Scene {
         }
     }
     void render() {
-        // triangles with unvisible triangles excluded
-        // auto triangles = triangleExclusion();
-
         Mat4 proj_mat = getTransformMatrix();
+        Mat4 norm_mat = cam.getViewMatrix().inverse().transpose();
+        Mat4 view_mat = cam.getViewMatrix();
+        float f1 = (50.f - 0.1f) / 2.0f, f2 = (50.f + 0.1f) / 2.0f;
+
         std::vector<Triangle> transformed_triangles;
-        int i = 1;
+        int tcnt = 0;
         for (const auto triangle : triangles) {
-            std::cout << "\rRendering triangle " << i++ << "   ";
+            std::cout << "\rRendering triangle " << tcnt++ << "   ";
             std::array<Vertex, 3>& vertices = triangle->v;
             std::array<Vertex, 3> t_vertices;
+            std::array<Vec3, 3> view_pos;
             for (int i = 0; i < 3; i++) {
-                Vec3 transformed(proj_mat * vertices[i].coord.toVec4());
+                Vec4 transformed4(proj_mat * vertices[i].coord.toVec4(1.0f));
+                Vec3 transformed(transformed4);
+                transformed = transformed / transformed4.w;
+
                 t_vertices[i].coord = std::move(transformed);
+                t_vertices[i].coord.x =
+                    0.5 * width * (t_vertices[i].coord.x + 1.0);
+                t_vertices[i].coord.y =
+                    0.5 * height * (t_vertices[i].coord.y + 1.0);
+                t_vertices[i].coord.z = t_vertices[i].coord.z * f1 + f2;
+                // TODO: apply inverse transform matrix for normals
+                t_vertices[i].normal =
+                    Vec3(norm_mat * vertices[i].normal.toVec4(0.0f))
+                        .normalized();
                 t_vertices[i].color = vertices[i].color;
+                view_pos[i] = Vec3(view_mat * vertices[i].coord.toVec4(1.0f));
             }
             // for each triangle, check if pixel is inside
             Triangle t_tri(t_vertices);
-            this->draw(t_tri);
+            this->draw(t_tri, view_pos);
         }
     }
-    Vec3 screenCoordToViewCoord(float u, float v) {
-        return Vec3((u - 0.5 * width) / width * cam.width,
-                    (v - 0.5 * height) / height * cam.height, 0.0f);
-    }
-    std::tuple<float, float> viewCoordToScreenCoord(float x, float y) {
-        return std::make_tuple(x / cam.width * width + 0.5 * float(width),
-                               y / cam.height * height + 0.5 * float(height));
-    }
-    void draw(const Triangle& triangle) {
+    void draw(const Triangle& triangle, const std::array<Vec3, 3>& view_pos) {
         Vec3 bounding_box[2] = {Vec3(width, height, 0), Vec3(0, 0, 0)};
         for (auto& vertex : triangle.v) {
-            auto [u, v] =
-                viewCoordToScreenCoord(vertex.coord.x, vertex.coord.y);
+            float u = vertex.coord.x;
+            float v = vertex.coord.y;
             bounding_box[0].x =
                 std::max(std::min(bounding_box[0].x, std::floor(u)), 0.0f);
             bounding_box[0].y =
                 std::max(std::min(bounding_box[0].y, std::floor(v)), 0.0f);
-            bounding_box[1].x =
-                std::min(float(width), std::max(bounding_box[1].x, std::ceil(u)));
-            bounding_box[1].y =
-                std::min(float(height), std::max(bounding_box[1].y, std::ceil(v)));
+            bounding_box[1].x = std::min(
+                float(width), std::max(bounding_box[1].x, std::ceil(u)));
+            bounding_box[1].y = std::min(
+                float(height), std::max(bounding_box[1].y, std::ceil(v)));
         }
         for (int y = bounding_box[0].y; y < bounding_box[1].y; y++) {
             for (int x = bounding_box[0].x; x < bounding_box[1].x; x++) {
-                auto coord =
-                    screenCoordToViewCoord(float(x) + 0.5f, float(y) + 0.5f);
-                if (triangle.inside(coord)) {
-                    auto [u, v, w] =
-                        triangle.computeBarycentric2D(coord.x, coord.y);
-                    coord.z = triangle.interpolateZ(u, v, w);
-                    if (coord.z < zbuffer[y][x]) {
-                        pixels[y][x] = triangle.getColor(u, v, w);
-                        zbuffer[y][x] = coord.z;
+                float xf = float(x) + 0.5, yf = float(y) + 0.5;
+                if (triangle.inside(Vec3(xf, yf, 0.0))) {
+                    auto [u, v, w] = triangle.computeBarycentric2D(xf, yf);
+                    float z = triangle.interpolateZ(u, v, w);
+                    if (z < zbuffer[y][x]) {
+                        Vec3 normal =
+                            triangle.interpolateNormal(u, v, w).normalized();
+                        pixels[y][x] = (normal + Vec3(1.0f)) / 2.f;
+                        zbuffer[y][x] = z;
                     }
                 }
             }

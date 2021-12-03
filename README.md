@@ -7,7 +7,8 @@ This is my own rasterizer implementation. Developed in C++17.
 
 ## Roadmap
 
-- [ ] basic rendering pipeline
+- [x] basic rendering pipeline
+- [ ] texture support
 - [ ] shadow
 - [ ] shader language support(Optional)
 

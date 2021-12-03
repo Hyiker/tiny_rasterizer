@@ -13,9 +13,9 @@ int main(int argc, char const* argv[]) {
         std::cerr << "no enough arguments\n";
         exit(-1);
     }
-    Rasterizer::Vec3 eye_pos(8, 0, 7), up(0, 1, 0), center(0, 0, 0);
-    Rasterizer::Camera cam(45, 4.0f / 3.0f, eye_pos, up, center, 5, 30);
-    Rasterizer::Scene scene(800, 600);
+    Rasterizer::Vec3 eye_pos(-3, 0, -3), up(0, 1, 0), center(0, 0, 0);
+    Rasterizer::Camera cam(45, 1.0f, eye_pos, up, center, 0.1, 30);
+    Rasterizer::Scene scene(800, 800);
     scene.setCamera(cam);
     parseOBJ(scene, argv[2]);
     scene.render();

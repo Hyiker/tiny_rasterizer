@@ -29,11 +29,9 @@ class Camera {
     }
     Mat4 getProjectionMatrix() {
         Mat4 projection;
-        near = -near;
         projection << 2 * near / width, 0, 0, 0, 0, 2 * near / height, 0, 0, 0,
             0, (near + far) / (near - far), 2 * far * near / (far - near), 0, 0,
             1, 0;
-        near = -near;
         return projection;
     }
     Mat4 getViewMatrix() {

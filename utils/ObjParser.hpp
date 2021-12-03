@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <unordered_set>
 
 #include "rasterizer/Scene.hpp"
 #include "rasterizer/Triangle.hpp"
@@ -34,7 +35,7 @@ static Rasterizer::Vertex _parseFaceVertex(std::string vstr,
         // TODO: support texture
     }
     if (vinfo_index[2] != -1) {
-        vertex.normal = v[vinfo_index[2] - 1];
+        vertex.normal = vn[vinfo_index[2] - 1];
     }
     return std::move(vertex);
 }
@@ -43,6 +44,8 @@ void parseOBJ(Rasterizer::Scene& scene, const std::string& filename) {
     std::vector<Rasterizer::Vec3> vertices;
     std::vector<Rasterizer::Vec3> normals;
     int n_faces = 0;
+
+    std::unordered_set<std::string> unsup;
     if (file.is_open()) {
         std::string line_buffer;
         while (std::getline(file, line_buffer)) {
@@ -72,8 +75,11 @@ void parseOBJ(Rasterizer::Scene& scene, const std::string& filename) {
                 n_faces++;
                 scene.addTriangle(tri);
             } else {
-                std::cout << "ignoring unsupported flag \"" << flag << "\""
-                          << std::endl;
+                if (unsup.count(flag) == 0) {
+                    unsup.insert(flag);
+                    std::cout << "ignoring unsupported flag \"" << flag << "\""
+                              << std::endl;
+                }
                 continue;
             }
         }
