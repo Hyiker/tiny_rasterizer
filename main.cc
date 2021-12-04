@@ -32,11 +32,10 @@ int main(int argc, char const* argv[]) {
     }
     Vec3 eye_pos(-3, 0, -3), up(0, 1, 0), center(0, 0, 0);
     Camera cam(45, 1.0f, eye_pos, up, center, 0.1, 30);
-    Scene scene(800, 800, textureFragmentShader);
+    Scene scene(800, 800, blingphongFragmentShader);
     Model* model = parseOBJ(argv[2]);
     scene.addModel(model);
     scene.addLight(Light(Vec3(20, 20, 20), Vec3(500, 500, 500)));
-    scene.addLight(Light(Vec3(-20, 20, 0), Vec3(500, 500, 500)));
     if (argc >= 4) {
         model->texture = Texture::loadPNGTexture(argv[3]);
     }
