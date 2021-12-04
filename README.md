@@ -8,9 +8,14 @@ This is my own rasterizer implementation. Developed in C++17.
 ## Roadmap
 
 - [x] basic rendering pipeline
-- [ ] texture support
+- [x] texture support
+- [ ] bling-phong light
 - [ ] shadow
 - [ ] shader language support(Optional)
+
+## Dependencies
+
+- [LodePNG](https://github.com/lvandeve/lodepng) (Header Only)
 
 ## Reference
 

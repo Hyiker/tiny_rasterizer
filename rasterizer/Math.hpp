@@ -8,7 +8,9 @@ namespace Rasterizer {
 
 // each color portion regularized to [0, 1]
 class Vec3;
+class Vec4;
 using RGBColor = Vec3;
+using RGBAColor = Vec4;
 class Vec4 {
    public:
     float x, y, z, w;
@@ -176,6 +178,12 @@ class Vec3 {
         return Vec3(x - v.x, y - v.y, z - v.z);
     }
     Vec3 operator-() const { return Vec3(-x, -y, -z); }
+    Vec3& operator=(const Vec4& v4) {
+        x = v4.x;
+        y = v4.y;
+        z = v4.z;
+        return *this;
+    }
     Vec3 sin() const { return Vec3(std::sin(x), std::sin(y), std::sin(z)); }
     Vec3 cos() const { return Vec3(std::cos(x), std::cos(y), std::cos(z)); }
     Vec4 toVec4(float w = 1.0f) const { return Vec4(x, y, z, w); }
@@ -201,6 +209,10 @@ Vec3 operator/(const Vec3& v, float coe) {
     coe = 1 / coe;
     return coe * Vec3(v.x, v.y, v.z);
 }
+Vec4 operator/(const Vec4& v, float coe) {
+    return Vec4(v.x / coe, v.y / coe, v.z / coe, v.w / coe);
+}
+
 std::ostream& operator<<(std::ostream& os, const Vec3& v) {
     os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return os;
@@ -227,6 +239,10 @@ namespace math {
 template <typename T>
 T clamp(T val, T f, T c) {
     return std::max(f, std::min(val, c));
+}
+template <typename T>
+T lerp(float r, T v0, T v1) {
+    return r * v0 + (1.0f - r) * v1;
 }
 }  // namespace math
 #endif /* MATH_HPP */

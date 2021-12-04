@@ -10,7 +10,8 @@
 
 static Rasterizer::Vertex _parseFaceVertex(std::string vstr,
                                            std::vector<Rasterizer::Vec3>& v,
-                                           std::vector<Rasterizer::Vec3>& vn) {
+                                           std::vector<Rasterizer::Vec3>& vn,
+                                           std::vector<Rasterizer::Vec3>& vt) {
     Rasterizer::Vertex vertex;
     long long vinfo_index[3]{-1, -1, -1};
     vstr += '/';
@@ -32,7 +33,7 @@ static Rasterizer::Vertex _parseFaceVertex(std::string vstr,
         vertex.coord = v[vinfo_index[0] - 1];
     }
     if (vinfo_index[1] != -1) {
-        // TODO: support texture
+        vertex.texture_coord = vt[vinfo_index[1] - 1];
     }
     if (vinfo_index[2] != -1) {
         vertex.normal = vn[vinfo_index[2] - 1];
@@ -42,6 +43,7 @@ static Rasterizer::Vertex _parseFaceVertex(std::string vstr,
 void parseOBJ(Rasterizer::Scene& scene, const std::string& filename) {
     std::ifstream file(filename);
     std::vector<Rasterizer::Vec3> vertices;
+    std::vector<Rasterizer::Vec3> texture_coords;
     std::vector<Rasterizer::Vec3> normals;
     int n_faces = 0;
 
@@ -70,10 +72,15 @@ void parseOBJ(Rasterizer::Scene& scene, const std::string& filename) {
                 for (int i = 0; i < 3; i++) {
                     std::string vstr;
                     ss >> vstr;
-                    tri->v[i] = _parseFaceVertex(vstr, vertices, normals);
+                    tri->v[i] = _parseFaceVertex(vstr, vertices, normals,
+                                                 texture_coords);
                 }
                 n_faces++;
                 scene.addTriangle(tri);
+            } else if (flag == "vt") {
+                Rasterizer::Vec3 vt;
+                ss >> vt.x >> vt.y;
+                texture_coords.emplace_back(std::move(vt));
             } else {
                 if (unsup.count(flag) == 0) {
                     unsup.insert(flag);
@@ -85,7 +92,7 @@ void parseOBJ(Rasterizer::Scene& scene, const std::string& filename) {
         }
         std::cout << "added " << n_faces << " triangle faces" << std::endl;
     } else {
-        std::cerr << "can't open file";
+        std::cerr << "can't open file " << filename;
         exit(1);
     }
 }

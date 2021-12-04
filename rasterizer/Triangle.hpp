@@ -11,10 +11,15 @@ class Vertex {
     Vec3 coord;
     RGBColor color;
     Vec3 normal;
+    Vec3 texture_coord;
     Vertex(const Vec3& coord = Vec3(0, 0, 0),
            const RGBColor& color = RGBColor(1.0),
-           const Vec3& normal = Vec3(0, 0, 1))
-        : coord{coord}, color{color}, normal{normal} {}
+           const Vec3& normal = Vec3(0, 0, 1),
+           const Vec3& texture_coord = Vec3(0, 0, 0))
+        : coord{coord},
+          color{color},
+          normal{normal},
+          texture_coord{texture_coord} {}
 };
 class Triangle {
    public:
@@ -59,6 +64,11 @@ class Triangle {
     Vec3 interpolateNormal(float u, float v, float w) const {
         return this->v[0].normal * u + this->v[1].normal * v +
                this->v[2].normal * w;
+    }
+
+    Vec3 interpolateTextureCoord(float u, float v, float w) const {
+        return this->v[0].texture_coord * u + this->v[1].texture_coord * v +
+               this->v[2].texture_coord * w;
     }
     RGBColor getColor(float u, float v, float w) const {
         return this->v[0].color * u + this->v[1].color * v +

@@ -2,11 +2,14 @@
 #define SCENE_HPP
 #include <cmath>
 #include <fstream>
+#include <functional>
 #include <limits>
 #include <vector>
 
 #include "rasterizer/Camera.hpp"
 #include "rasterizer/Math.hpp"
+#include "rasterizer/Shader.hpp"
+#include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
 namespace Rasterizer {
 class Scene {
@@ -28,10 +31,18 @@ class Scene {
     int height;
     std::vector<std::vector<RGBColor>> pixels;
     std::vector<std::vector<float>> zbuffer;
+    // TODO: add model class
+    Texture* texture;
     std::vector<Triangle*> triangles;
+    Shader fragment_shader;
 
     // defaultly, look from 0, 0, 5 along the negative z axis
-    Scene(int width, int height) : width{width}, height{height} {
+    Scene(int width, int height, Texture* texture = nullptr,
+          Shader fragment_shader = normalFragmentShader)
+        : width{width},
+          height{height},
+          texture{texture},
+          fragment_shader{fragment_shader} {
         pixels.resize(height);
         zbuffer.resize(height);
         for (int i = 0; i < height; i++) {
@@ -66,11 +77,10 @@ class Scene {
                 t_vertices[i].coord.y =
                     0.5 * height * (t_vertices[i].coord.y + 1.0);
                 t_vertices[i].coord.z = t_vertices[i].coord.z * f1 + f2;
-                // TODO: apply inverse transform matrix for normals
                 t_vertices[i].normal =
                     Vec3(norm_mat * vertices[i].normal.toVec4(0.0f))
                         .normalized();
-                t_vertices[i].color = vertices[i].color;
+                t_vertices[i].texture_coord = vertices[i].texture_coord;
                 view_pos[i] = Vec3(view_mat * vertices[i].coord.toVec4(1.0f));
             }
             // for each triangle, check if pixel is inside
@@ -96,12 +106,25 @@ class Scene {
             for (int x = bounding_box[0].x; x < bounding_box[1].x; x++) {
                 float xf = float(x) + 0.5, yf = float(y) + 0.5;
                 if (triangle.inside(Vec3(xf, yf, 0.0))) {
-                    auto [u, v, w] = triangle.computeBarycentric2D(xf, yf);
-                    float z = triangle.interpolateZ(u, v, w);
+                    auto [alpha, beta, gamma] =
+                        triangle.computeBarycentric2D(xf, yf);
+                    float z = triangle.interpolateZ(alpha, beta, gamma);
                     if (z < zbuffer[y][x]) {
                         Vec3 normal =
-                            triangle.interpolateNormal(u, v, w).normalized();
-                        pixels[y][x] = (normal + Vec3(1.0f)) / 2.f;
+                            triangle.interpolateNormal(alpha, beta, gamma)
+                                .normalized();
+                        Vec3 view_position = view_pos[0] * alpha +
+                                             view_pos[1] * beta +
+                                             view_pos[2] * gamma;
+                        FragmentShaderPayload payload;
+                        payload.normal = normal;
+                        payload.view_position = view_position;
+                        payload.screen_position = Vec3(xf, yf, 0.0f);
+                        payload.texture = this->texture;
+                        payload.texture_coord =
+                            triangle.interpolateTextureCoord(alpha, beta,
+                                                             gamma);
+                        pixels[y][x] = fragment_shader(payload);
                         zbuffer[y][x] = z;
                     }
                 }
@@ -129,6 +152,13 @@ class Scene {
         }
         ofs.flush();
         ofs.close();
+    }
+    ~Scene() {
+        delete texture;
+        for (auto p_tri : triangles) {
+            delete p_tri;
+            p_tri = nullptr;
+        }
     }
 };
 
