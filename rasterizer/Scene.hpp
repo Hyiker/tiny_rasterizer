@@ -7,7 +7,9 @@
 #include <vector>
 
 #include "rasterizer/Camera.hpp"
+#include "rasterizer/Light.hpp"
 #include "rasterizer/Math.hpp"
+#include "rasterizer/Model.hpp"
 #include "rasterizer/Shader.hpp"
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
@@ -18,11 +20,9 @@ class Scene {
     // TODO: remove by vertices
     std::vector<Triangle*> triangleExclusion() { return {}; }
     Mat4 getTransformMatrix() {
-        // TODO: implement real model transformation
-        Mat4 model_mat = Mat4::identity();
         Mat4 proj_mat = cam.getProjectionMatrix();
         Mat4 view_mat = cam.getViewMatrix();
-        return proj_mat * view_mat * model_mat;
+        return proj_mat * view_mat;
     }
 
    public:
@@ -31,18 +31,13 @@ class Scene {
     int height;
     std::vector<std::vector<RGBColor>> pixels;
     std::vector<std::vector<float>> zbuffer;
-    // TODO: add model class
-    Texture* texture;
-    std::vector<Triangle*> triangles;
+    std::vector<Model*> models;
+    std::vector<Light> lights;
     Shader fragment_shader;
 
     // defaultly, look from 0, 0, 5 along the negative z axis
-    Scene(int width, int height, Texture* texture = nullptr,
-          Shader fragment_shader = normalFragmentShader)
-        : width{width},
-          height{height},
-          texture{texture},
-          fragment_shader{fragment_shader} {
+    Scene(int width, int height, Shader fragment_shader = normalFragmentShader)
+        : width{width}, height{height}, fragment_shader{fragment_shader} {
         pixels.resize(height);
         zbuffer.resize(height);
         for (int i = 0; i < height; i++) {
@@ -55,40 +50,48 @@ class Scene {
     }
     void render() {
         Mat4 proj_mat = getTransformMatrix();
-        Mat4 norm_mat = cam.getViewMatrix().inverse().transpose();
         Mat4 view_mat = cam.getViewMatrix();
         float f1 = (50.f - 0.1f) / 2.0f, f2 = (50.f + 0.1f) / 2.0f;
 
         std::vector<Triangle> transformed_triangles;
         int tcnt = 0;
-        for (const auto triangle : triangles) {
-            std::cout << "\rRendering triangle " << tcnt++ << "   ";
-            std::array<Vertex, 3>& vertices = triangle->v;
-            std::array<Vertex, 3> t_vertices;
-            std::array<Vec3, 3> view_pos;
-            for (int i = 0; i < 3; i++) {
-                Vec4 transformed4(proj_mat * vertices[i].coord.toVec4(1.0f));
-                Vec3 transformed(transformed4);
-                transformed = transformed / transformed4.w;
+        for (const auto& model : models) {
+            Mat4 model_matrix = model->getModelMatrix();
+            Mat4 norm_mat =
+                (cam.getViewMatrix() * model_matrix).inverse().transpose();
+            for (const auto triangle : model->triangles) {
+                std::cout << "\rRendering triangle " << tcnt++ << "   ";
+                std::array<Vertex, 3>& vertices = triangle->v;
+                std::array<Vertex, 3> t_vertices;
+                std::array<Vec3, 3> view_pos;
+                for (int i = 0; i < 3; i++) {
+                    Vec4 transformed4(proj_mat * model_matrix *
+                                      vertices[i].coord.toVec4(1.0f));
+                    Vec3 transformed(transformed4);
+                    transformed = transformed / transformed4.w;
 
-                t_vertices[i].coord = std::move(transformed);
-                t_vertices[i].coord.x =
-                    0.5 * width * (t_vertices[i].coord.x + 1.0);
-                t_vertices[i].coord.y =
-                    0.5 * height * (t_vertices[i].coord.y + 1.0);
-                t_vertices[i].coord.z = t_vertices[i].coord.z * f1 + f2;
-                t_vertices[i].normal =
-                    Vec3(norm_mat * vertices[i].normal.toVec4(0.0f))
-                        .normalized();
-                t_vertices[i].texture_coord = vertices[i].texture_coord;
-                view_pos[i] = Vec3(view_mat * vertices[i].coord.toVec4(1.0f));
+                    t_vertices[i].coord = std::move(transformed);
+                    t_vertices[i].coord.x =
+                        0.5 * width * (t_vertices[i].coord.x + 1.0);
+                    t_vertices[i].coord.y =
+                        0.5 * height * (t_vertices[i].coord.y + 1.0);
+                    t_vertices[i].coord.z = t_vertices[i].coord.z * f1 + f2;
+                    t_vertices[i].normal =
+                        Vec3(norm_mat * vertices[i].normal.toVec4(0.0f))
+                            .normalized();
+                    t_vertices[i].texture_coord = vertices[i].texture_coord;
+                    t_vertices[i].color = RGBColor(148, 121, 92);
+                    view_pos[i] = Vec3(view_mat * model_matrix *
+                                       vertices[i].coord.toVec4(1.0f));
+                }
+                // for each triangle, check if pixel is inside
+                Triangle t_tri(t_vertices);
+                this->draw(t_tri, view_pos, model->texture);
             }
-            // for each triangle, check if pixel is inside
-            Triangle t_tri(t_vertices);
-            this->draw(t_tri, view_pos);
         }
     }
-    void draw(const Triangle& triangle, const std::array<Vec3, 3>& view_pos) {
+    void draw(const Triangle& triangle, const std::array<Vec3, 3>& view_pos,
+              Texture* tex) {
         Vec3 bounding_box[2] = {Vec3(width, height, 0), Vec3(0, 0, 0)};
         for (auto& vertex : triangle.v) {
             float u = vertex.coord.x;
@@ -120,10 +123,14 @@ class Scene {
                         payload.normal = normal;
                         payload.view_position = view_position;
                         payload.screen_position = Vec3(xf, yf, 0.0f);
-                        payload.texture = this->texture;
+                        payload.texture = tex;
                         payload.texture_coord =
                             triangle.interpolateTextureCoord(alpha, beta,
                                                              gamma);
+                        payload.color =
+                            triangle.interpolateColor(alpha, beta, gamma);
+                        payload.eye_pos = cam.eye_pos;
+                        payload.lights = this->lights;
                         pixels[y][x] = fragment_shader(payload);
                         zbuffer[y][x] = z;
                     }
@@ -132,7 +139,8 @@ class Scene {
         }
     }
     void setCamera(const Camera& cam) { this->cam = cam; }
-    void addTriangle(Triangle* t) { triangles.push_back(t); }
+    void addModel(Model* model) { this->models.emplace_back(model); }
+    void addLight(const Light& light) { this->lights.push_back(light); }
     void dumpToPPM(const std::string& path) {
         std::ofstream ofs(path, std::ios::binary);
         ofs.write("P6\n", 3);
@@ -154,10 +162,9 @@ class Scene {
         ofs.close();
     }
     ~Scene() {
-        delete texture;
-        for (auto p_tri : triangles) {
-            delete p_tri;
-            p_tri = nullptr;
+        for (auto& model : models) {
+            delete model;
+            model = nullptr;
         }
     }
 };

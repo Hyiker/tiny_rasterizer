@@ -70,7 +70,7 @@ class Triangle {
         return this->v[0].texture_coord * u + this->v[1].texture_coord * v +
                this->v[2].texture_coord * w;
     }
-    RGBColor getColor(float u, float v, float w) const {
+    RGBColor interpolateColor(float u, float v, float w) const {
         return this->v[0].color * u + this->v[1].color * v +
                this->v[2].color * w;
     }

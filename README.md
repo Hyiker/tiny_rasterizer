@@ -5,17 +5,29 @@
 
 This is my own rasterizer implementation. Developed in C++17.
 
+## Usage
+
+1. compile
+2. `./rasterizer [dist] [model] [texture(optional)]`
+
 ## Roadmap
 
 - [x] basic rendering pipeline
 - [x] texture support
-- [ ] bling-phong light
+- [x] bling-phong light
 - [ ] shadow
 - [ ] shader language support(Optional)
 
 ## Dependencies
 
 - [LodePNG](https://github.com/lvandeve/lodepng) (Header Only)
+- [OBJ Loader](https://github.com/Bly7/OBJ-Loader) (Header Only)
+
+## Example
+
+![Cow](./images/cow_text.png)
+
+Cow rendered using texture shader.
 
 ## Reference
 

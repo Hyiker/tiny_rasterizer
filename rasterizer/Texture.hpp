@@ -11,30 +11,33 @@ struct Texture {
     std::vector<unsigned char> raw_pixels;
     // rgba format
     std::vector<std::vector<RGBAColor>> tex;
-    void loadPNG(const std::string& filename) {
-        unsigned error =
-            lodepng::decode(raw_pixels, width, height, filename.c_str());
+    static Texture* loadPNGTexture(const std::string& filename) {
+        Texture* texture = new Texture();
+        unsigned error = lodepng::decode(texture->raw_pixels, texture->width,
+                                         texture->height, filename.c_str());
         if (error) {
             std::cerr << "can't load png texture file " << filename << ": "
                       << lodepng_error_text(error) << std::endl;
             exit(-1);
         }
-        std::cout << "load PNG texture size:" << width << "x" << height
-                  << std::endl;
-        tex.resize(height);
-        for (auto& row : tex) {
-            row.resize(width);
+        std::cout << "load PNG texture size:" << texture->width << "x"
+                  << texture->height << std::endl;
+        texture->tex.resize(texture->height);
+        for (auto& row : texture->tex) {
+            row.resize(texture->width);
         }
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int p_start = y * width * 4 + x * 4;
-                tex[y][x] =
-                    RGBAColor(raw_pixels[p_start], raw_pixels[p_start + 1],
-                              raw_pixels[p_start + 2],
-                              raw_pixels[p_start + 3]) /
+        for (int y = 0; y < texture->height; y++) {
+            for (int x = 0; x < texture->width; x++) {
+                int p_start = y * texture->width * 4 + x * 4;
+                texture->tex[y][x] =
+                    RGBAColor(texture->raw_pixels[p_start],
+                              texture->raw_pixels[p_start + 1],
+                              texture->raw_pixels[p_start + 2],
+                              texture->raw_pixels[p_start + 3]) /
                     255.0f;
             }
         }
+        return texture;
     }
     RGBColor getRGB(float u, float v) const {
         float u_img = u * (width - 1);

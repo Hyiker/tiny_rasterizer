@@ -186,6 +186,16 @@ class Vec3 {
     }
     Vec3 sin() const { return Vec3(std::sin(x), std::sin(y), std::sin(z)); }
     Vec3 cos() const { return Vec3(std::cos(x), std::cos(y), std::cos(z)); }
+    Vec3 cwiseProduct(const Vec3& v2) const {
+        return Vec3(x * v2.x, y * v2.y, z * v2.z);
+    }
+    Vec3 max(const Vec3 v) const {
+        return Vec3(std::max(v.x, x), std::max(v.y, y), std::max(v.z, z));
+    }
+
+    Vec3 min(const Vec3 v) const {
+        return Vec3(std::min(v.x, x), std::min(v.y, y), std::min(v.z, z));
+    }
     Vec4 toVec4(float w = 1.0f) const { return Vec4(x, y, z, w); }
     RGBColor rgbNormalized() const { return (*this) / 255.0f; }
     RGBColor& rgbNormalize() {
