@@ -133,20 +133,17 @@ Rasterizer::Model* parseOBJ(const std::string& filename) {
     objl::Loader loader;
     bool loadout = loader.LoadFile(filename);
     for (auto mesh : loader.LoadedMeshes) {
-        for (int i = 0; i < mesh.Vertices.size(); i += 3) {
+        for (int i = 0; i < mesh.Indices.size(); i += 3) {
             Rasterizer::Triangle* t = new Rasterizer::Triangle();
             for (int j = 0; j < 3; j++) {
-                t->v[j].coord =
-                    Rasterizer::Vec3(mesh.Vertices[i + j].Position.X,
-                                     mesh.Vertices[i + j].Position.Y,
-                                     mesh.Vertices[i + j].Position.Z);
-                t->v[j].normal =
-                    Rasterizer::Vec3(mesh.Vertices[i + j].Normal.X,
-                                     mesh.Vertices[i + j].Normal.Y,
-                                     mesh.Vertices[i + j].Normal.Z);
-                t->v[j].texture_coord = Rasterizer::Vec3(
-                    mesh.Vertices[i + j].TextureCoordinate.X,
-                    mesh.Vertices[i + j].TextureCoordinate.Y, 0.0);
+                auto& vertex = mesh.Vertices[mesh.Indices[i + j]];
+                t->v[j].coord = Rasterizer::Vec3(
+                    vertex.Position.X, vertex.Position.Y, vertex.Position.Z);
+                t->v[j].normal = Rasterizer::Vec3(
+                    vertex.Normal.X, vertex.Normal.Y, vertex.Normal.Z);
+                t->v[j].texture_coord =
+                    Rasterizer::Vec3(vertex.TextureCoordinate.X,
+                                     vertex.TextureCoordinate.Y, 0.0);
             }
             model->addTriangle(t);
         }

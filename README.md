@@ -15,7 +15,10 @@ This is my own rasterizer implementation. Developed in C++17.
 - [x] basic rendering pipeline
 - [x] texture support
 - [x] bling-phong light
-- [ ] shadow
+- [x] mesh support
+- [ ] realtime render window
+- [ ] hard shadow
+- [ ] soft shadow
 - [ ] shader language support(Optional)
 
 ## Dependencies

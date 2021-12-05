@@ -30,10 +30,11 @@ int main(int argc, char const* argv[]) {
         std::cerr << "no enough arguments\n";
         exit(-1);
     }
-    Vec3 eye_pos(-3, 0, -3), up(0, 1, 0), center(0, 0, 0);
+    Vec3 eye_pos(0, 5, 5), up(0, 1, 0), center(0, 0, 0);
     Camera cam(45, 1.0f, eye_pos, up, center, 0.1, 30);
-    Scene scene(800, 800, blingphongFragmentShader);
+    Scene scene(800, 800, normalFragmentShader);
     Model* model = parseOBJ(argv[2]);
+    model->scale(0.2);
     scene.addModel(model);
     scene.addLight(Light(Vec3(20, 20, 20), Vec3(500, 500, 500)));
     if (argc >= 4) {

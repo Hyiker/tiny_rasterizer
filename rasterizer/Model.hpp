@@ -12,11 +12,13 @@ class Model {
     std::vector<Triangle*> triangles;
     Mat4 transform;
     Model() : texture{nullptr}, transform{Mat4::identity()} {}
-
     Mat4 getModelMatrix() const { return transform; }
-
     void addTriangle(Triangle* tri) { this->triangles.emplace_back(tri); }
-
+    void scale(float ratio) {
+        Mat4 scale_mat;
+        scale_mat << ratio, 0, 0, 0, 0, ratio, 0, 0, 0, 0, ratio, 0, 0, 0, 0, 1;
+        transform = transform * scale_mat;
+    }
     ~Model() {
         delete texture;
         for (auto p_tri : triangles) {
