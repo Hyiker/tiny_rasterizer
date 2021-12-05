@@ -6,6 +6,7 @@
 #include <limits>
 #include <vector>
 
+#include "lib/lodepng.h"
 #include "rasterizer/Camera.hpp"
 #include "rasterizer/Light.hpp"
 #include "rasterizer/Math.hpp"
@@ -85,7 +86,7 @@ class Scene {
                                        vertices[i].coord.toVec4(1.0f));
                 }
                 // for each triangle, check if pixel is inside
-                Triangle t_tri(t_vertices);
+                Triangle t_tri(t_vertices, triangle->material);
                 this->draw(t_tri, view_pos, model->texture);
             }
         }
@@ -131,6 +132,7 @@ class Scene {
                             triangle.interpolateColor(alpha, beta, gamma);
                         payload.eye_pos = cam.eye_pos;
                         payload.lights = this->lights;
+                        payload.material = triangle.material;
                         pixels[y][x] = fragment_shader(payload);
                         zbuffer[y][x] = z;
                     }
@@ -160,6 +162,26 @@ class Scene {
         }
         ofs.flush();
         ofs.close();
+    }
+    void dumpToPNG(const std::string& path) {
+        std::vector<unsigned char> image;
+        image.resize(pixels.size() * pixels[0].size() * 4);
+        int i = 0;
+        for (auto& row : pixels) {
+            for (auto& pixel : row) {
+                Vec3 p255 = pixel * 255.0f;
+                unsigned char r = p255.x, g = p255.y, b = p255.z, a = 255;
+                image[i++] = r;
+                image[i++] = g;
+                image[i++] = b;
+                image[i++] = a;
+            }
+        }
+        unsigned error = lodepng::encode(path, image, width, height);
+        if (error) {
+            std::cerr << "dump to png failed: " << lodepng_error_text(error);
+            exit(1);
+        }
     }
     ~Scene() {
         for (auto& model : models) {

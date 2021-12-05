@@ -14,6 +14,7 @@ struct FragmentShaderPayload {
     Vec3 texture_coord;
     RGBColor color;
     Texture* texture;
+    Material* material;
     Vec3 eye_pos;
     std::vector<Light> lights;
 };
@@ -22,20 +23,22 @@ RGBColor normalFragmentShader(FragmentShaderPayload& payload) {
     return color;
 }
 RGBColor textureFragmentShader(FragmentShaderPayload& payload) {
+    RGBColor texture_color;
     if (!payload.texture) {
-        return RGBColor(0, 0, 0);
+        texture_color = RGBColor(1.0);
+    } else {
+        texture_color = payload.texture->getRGBBilinear(
+            payload.texture_coord.x, payload.texture_coord.y);
     }
-    RGBColor texture_color = payload.texture->getRGBBilinear(
-        payload.texture_coord.x, payload.texture_coord.y);
     // coefficients for ambient, diffuse and specular lighting
-    Vec3 ka = Vec3(0.005);
-    Vec3 kd = texture_color;
-    Vec3 ks = Vec3(0.7937);
-    float shiness = 150.0f;
+    Vec3 ka = payload.material->Ka;
+    Vec3 kd = payload.texture ? texture_color : payload.material->Kd;
+    Vec3 ks = payload.material->Ks;
+    float shiness = payload.material->Ns;
 
     Vec3 eye_vec = (payload.eye_pos - payload.view_position).normalized();
 
-    Vec3 ambient_light_intensity(10);
+    Vec3 ambient_light_intensity(0.01);
     RGBColor color;
     for (auto& light : payload.lights) {
         float light_point_dist_sq =
@@ -98,7 +101,7 @@ RGBColor blingphongFragmentShader(FragmentShaderPayload& payload) {
 }
 RGBColor textureFragmentShaderNoLight(FragmentShaderPayload& payload) {
     if (!payload.texture) {
-        return RGBColor(0, 0, 0);
+        return RGBColor(1.0);
     }
     RGBColor texture_color = payload.texture->getRGBBilinear(
         payload.texture_coord.x, payload.texture_coord.y);

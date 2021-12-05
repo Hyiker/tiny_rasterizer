@@ -2,6 +2,7 @@
 #define MODEL_HPP
 #include <vector>
 
+#include "rasterizer/Material.hpp"
 #include "rasterizer/Math.hpp"
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
@@ -9,6 +10,7 @@ namespace Rasterizer {
 class Model {
    public:
     Texture* texture;
+
     std::vector<Triangle*> triangles;
     Mat4 transform;
     Model() : texture{nullptr}, transform{Mat4::identity()} {}

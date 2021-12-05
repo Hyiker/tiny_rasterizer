@@ -15,7 +15,8 @@ This is my own rasterizer implementation. Developed in C++17.
 - [x] basic rendering pipeline
 - [x] texture support
 - [x] bling-phong light
-- [x] mesh support
+- [x] mesh support(broken, no separate texture and material)
+- [x] mtl support
 - [ ] realtime render window
 - [ ] hard shadow
 - [ ] soft shadow
@@ -23,14 +24,18 @@ This is my own rasterizer implementation. Developed in C++17.
 
 ## Dependencies
 
-- [LodePNG](https://github.com/lvandeve/lodepng) (Header Only)
-- [OBJ Loader](https://github.com/Bly7/OBJ-Loader) (Header Only)
+- [LodePNG](https://github.com/lvandeve/lodepng) Load PNG format texture. (Header Only)
+- [OBJ Loader](https://github.com/Bly7/OBJ-Loader) Load .obj model file (Header Only)
 
-## Example
+## Render Samples
 
 ![Cow](./images/cow_text.png)
 
-Cow rendered using texture shader.
+GAMES101 Assignment's cow with texture & lighting model.
+
+![Shoe](./images/shoe_text.png)
+
+High heel from Free3d with lighting(implemented without texture).
 
 ## Reference
 

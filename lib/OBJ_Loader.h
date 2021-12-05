@@ -341,6 +341,15 @@ inline std::string tail(const std::string& in) {
     }
     return "";
 }
+inline void rtrim(std::string& s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         [](unsigned char ch) {
+                             return !std::isspace(ch) && ch != '\r' &&
+                                    ch != '\n';
+                         })
+                .base(),
+            s.end());
+}
 
 // Get first token of string
 inline std::string firstToken(const std::string& in) {
@@ -589,11 +598,6 @@ class Loader {
                 }
 
                 pathtomat += algorithm::tail(curline);
-
-#ifdef OBJL_CONSOLE_OUTPUT
-                std::cout << std::endl
-                          << "- find materials in: " << pathtomat << std::endl;
-#endif
 
                 // Load Materials
                 LoadMaterials(pathtomat);
@@ -903,14 +907,30 @@ class Loader {
 
     // Load Materials from .mtl file
     bool LoadMaterials(std::string path) {
+        algorithm::rtrim(path);
         // If the file is not a material file return false
-        if (path.substr(path.size() - 4, path.size()) != ".mtl") return false;
-
+        if (path.substr(path.length() - 4, 4) != ".mtl") {
+#ifdef OBJL_CONSOLE_OUTPUT
+            std::cout << std::endl
+                      << "- path is not a legal mtl file: " << path
+                      << std::endl;
+#endif
+            return false;
+        }
         std::ifstream file(path);
 
         // If the file is not found return false
-        if (!file.is_open()) return false;
+        if (!file.is_open()) {
+#ifdef OBJL_CONSOLE_OUTPUT
+            std::cout << std::endl
+                      << "- cannot find materials in: " << path << std::endl;
+#endif
+            return false;
+        }
 
+#ifdef OBJL_CONSOLE_OUTPUT
+        std::cout << std::endl << "- find materials in: " << path << std::endl;
+#endif
         Material tempMaterial;
 
         bool listening = false;

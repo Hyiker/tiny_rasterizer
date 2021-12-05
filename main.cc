@@ -32,7 +32,7 @@ int main(int argc, char const* argv[]) {
     }
     Vec3 eye_pos(0, 5, 5), up(0, 1, 0), center(0, 0, 0);
     Camera cam(45, 1.0f, eye_pos, up, center, 0.1, 30);
-    Scene scene(800, 800, normalFragmentShader);
+    Scene scene(800, 800, textureFragmentShader);
     Model* model = parseOBJ(argv[2]);
     model->scale(0.2);
     scene.addModel(model);
@@ -44,6 +44,6 @@ int main(int argc, char const* argv[]) {
     auto duration = measure([&]() { scene.render(); });
     std::cout << "\nmilliseconds cost: " << duration << "\n"
               << "estimated fps: " << (1000.0f / float(duration));
-    scene.dumpToPPM(argv[1]);
+    scene.dumpToPNG(argv[1]);
     return 0;
 }

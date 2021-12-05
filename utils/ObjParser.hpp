@@ -6,133 +6,26 @@
 #include <unordered_set>
 
 #include "lib/OBJ_Loader.h"
+#include "rasterizer/Material.hpp"
 #include "rasterizer/Model.hpp"
 #include "rasterizer/Triangle.hpp"
 
-static Rasterizer::Vertex _parseFaceVertex(std::string vstr,
-                                           std::vector<Rasterizer::Vec3>& v,
-                                           std::vector<Rasterizer::Vec3>& vn,
-                                           std::vector<Rasterizer::Vec3>& vt) {
-    Rasterizer::Vertex vertex;
-    long long vinfo_index[3]{-1, -1, -1};
-    vstr += '/';
-    int j = 0;
-    long long index = 0;
-    for (int i = 0; i < vstr.length(); i++) {
-        if (vstr[i] == '/') {
-            if (index != 0) {
-                vinfo_index[j++] = index;
-                index = 0;
-            } else {
-                j++;
-            }
-        } else {
-            index = index * 10ll + (long long)(vstr[i] - '0');
-        }
-    }
-    if (vinfo_index[0] != -1) {
-        vertex.coord = v[vinfo_index[0] - 1];
-    }
-    if (vinfo_index[1] != -1) {
-        vertex.texture_coord = vt[vinfo_index[1] - 1];
-    }
-    if (vinfo_index[2] != -1) {
-        vertex.normal = vn[vinfo_index[2] - 1];
-    }
-    return std::move(vertex);
+static Rasterizer::Vec3 to_vec3(const objl::Vector3& ov3) {
+    return Rasterizer::Vec3(ov3.X, ov3.Y, ov3.Z);
 }
-// Rasterizer::Model* parseOBJ(const std::string& filename) {
-//     Rasterizer::Model* model = new Rasterizer::Model();
-//     std::ifstream file(filename);
-//     std::vector<Rasterizer::Vec3> vertices;
-//     std::vector<Rasterizer::Vec3> texture_coords;
-//     std::vector<Rasterizer::Vec3> normals;
-//     int n_faces = 0;
-//
-//     std::unordered_set<std::string> unsup;
-//     if (file.is_open()) {
-//         std::string line_buffer;
-//         while (std::getline(file, line_buffer)) {
-//             if (line_buffer.size() == 0 || line_buffer[0] == '#') {
-//                 // commment or empty line
-//                 continue;
-//             }
-//             std::stringstream ss(line_buffer);
-//             std::string flag;
-//             ss >> flag;
-//             if (flag == "v") {
-//                 Rasterizer::Vec3 v;
-//                 ss >> v.x >> v.y >> v.z;
-//                 vertices.emplace_back(std::move(v));
-//             } else if (flag == "vn") {
-//                 Rasterizer::Vec3 vn;
-//                 ss >> vn.x >> vn.y >> vn.z;
-//                 normals.emplace_back(std::move(vn));
-//             } else if (flag == "f") {
-//                 std::string vvn;
-//                 std::vector<std::string> vstrs;
-//                 while (ss.tellg() != -1) {
-//                     std::string vstr;
-//                     ss >> vstr;
-//                     if (vstr == "") {
-//                         break;
-//                     }
-//                     vstrs.emplace_back(std::move(vstr));
-//                 }
-//                 if (vstrs.size() == 3) {
-//                     Rasterizer::Triangle* tri = new Rasterizer::Triangle();
-//                     for (int i = 0; i < 3; i++)
-//                         tri->v[i] = _parseFaceVertex(vstrs[i], vertices,
-//                                                      normals,
-//                                                      texture_coords);
-//                     model->addTriangle(tri);
-//                 } else if (vstrs.size() == 4) {
-//                     Rasterizer::Triangle *tri1 = new Rasterizer::Triangle(),
-//                                          *tri2 = new Rasterizer::Triangle();
-//                     for (int i = 0; i < 3; i++)
-//                         tri1->v[i] = _parseFaceVertex(vstrs[i], vertices,
-//                                                       normals,
-//                                                       texture_coords);
-//
-//                     for (int i = 0; i < 3; i++)
-//                         tri2->v[(i + 2) % 4] =
-//                             _parseFaceVertex(vstrs[(i + 2) % 4], vertices,
-//                                              normals, texture_coords);
-//                     model->addTriangle(tri1);
-//                     model->addTriangle(tri2);
-//                 } else {
-//                     std::cout << "Unsupported polygon with " << vstrs.size()
-//                               << " vertices\n";
-//                 }
-//
-//                 n_faces++;
-//             } else if (flag == "vt") {
-//                 Rasterizer::Vec3 vt;
-//                 ss >> vt.x >> vt.y;
-//                 texture_coords.emplace_back(std::move(vt));
-//             } else {
-//                 if (unsup.count(flag) == 0) {
-//                     unsup.insert(flag);
-//                     std::cout << "ignoring unsupported flag \"" << flag <<
-//                     "\""
-//                               << std::endl;
-//                 }
-//                 continue;
-//             }
-//         }
-//         std::cout << "added " << n_faces << " faces" << std::endl;
-//     } else {
-//         std::cerr << "can't open file " << filename;
-//         exit(1);
-//     }
-//     return model;
-// }
 
 Rasterizer::Model* parseOBJ(const std::string& filename) {
     Rasterizer::Model* model = new Rasterizer::Model();
     objl::Loader loader;
     bool loadout = loader.LoadFile(filename);
     for (auto mesh : loader.LoadedMeshes) {
+        Rasterizer::Material* mesh_material = new Rasterizer::Material();
+        mesh_material->name = mesh.MeshMaterial.name;
+        mesh_material->illum = mesh.MeshMaterial.illum;
+        mesh_material->Ns = mesh.MeshMaterial.Ns;
+        mesh_material->Ka = to_vec3(mesh.MeshMaterial.Ka);
+        mesh_material->Ks = to_vec3(mesh.MeshMaterial.Ks);
+        mesh_material->Kd = to_vec3(mesh.MeshMaterial.Kd);
         for (int i = 0; i < mesh.Indices.size(); i += 3) {
             Rasterizer::Triangle* t = new Rasterizer::Triangle();
             for (int j = 0; j < 3; j++) {
@@ -145,6 +38,7 @@ Rasterizer::Model* parseOBJ(const std::string& filename) {
                     Rasterizer::Vec3(vertex.TextureCoordinate.X,
                                      vertex.TextureCoordinate.Y, 0.0);
             }
+            t->material = mesh_material;
             model->addTriangle(t);
         }
     }

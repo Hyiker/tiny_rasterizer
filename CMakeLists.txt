@@ -9,7 +9,7 @@ find_package(glfw3 3.3 REQUIRED)
 
 set(SOURCE_FILES main.cc utils/ObjParser.hpp rasterizer/Scene.hpp rasterizer/Camera.hpp 
                     rasterizer/Shader.hpp rasterizer/Model.hpp rasterizer/Triangle.hpp
-                    rasterizer/Light.hpp
+                    rasterizer/Light.hpp rasterizer/Material.hpp
                     rasterizer/Math.hpp window/Window.hpp
                     rasterizer/Texture.hpp
                     lib/lodepng.h lib/lodepng.cpp lib/OBJ_Loader.h)
