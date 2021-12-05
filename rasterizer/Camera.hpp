@@ -35,7 +35,6 @@ class Camera {
         return projection;
     }
     Mat4 getViewMatrix() {
-        // TODO: implement camera rotation
         Mat4 t_view, r_view;
         Vec3 focal = (center - eye_pos).normalized();
         Vec3 f = -focal, r = focal.cross(up).normalized(), u = f.cross(r);

@@ -17,6 +17,7 @@ This is my own rasterizer implementation. Developed in C++17.
 - [x] bling-phong light
 - [x] mesh support(broken, no separate texture and material)
 - [x] mtl support
+- [ ] Antialias
 - [ ] realtime render window
 - [ ] hard shadow
 - [ ] soft shadow
