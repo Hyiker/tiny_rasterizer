@@ -8,7 +8,7 @@ This is my own rasterizer implementation. Developed in C++17.
 ## Usage
 
 1. compile
-2. `./rasterizer [dist] [model] [texture(optional)]`
+2. `./rasterizer [model]`, model names plz refer to [](./assets/README.md)
 
 ## Roadmap
 
@@ -18,7 +18,10 @@ This is my own rasterizer implementation. Developed in C++17.
 - [x] mesh support(broken, no separate texture and material)
 - [x] mtl support
 - [ ] Antialias
-- [ ] realtime render window
+- [x] realtime render window
+    - [x] MacOS
+    - [ ] Linux(Ubuntu?)
+    - [ ] Window
 - [ ] hard shadow
 - [ ] soft shadow
 - [ ] shader language support(Optional)
@@ -36,8 +39,13 @@ GAMES101 Assignment's cow with texture & lighting model.
 
 ![Shoe](./images/shoe_text.png)
 
-High heel from Free3d with lighting(implemented without texture).
+High heel shoe from Free3d with lighting(implemented without texture).
 
-## Reference
+![Shoe](./images/shoe.gif)
+
+Display realtime in a window.
+
+## References
 
 - [GAMES101](https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html)
+- [zauonlok's renderer](https://github.com/zauonlok/renderew)

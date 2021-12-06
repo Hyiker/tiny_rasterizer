@@ -1,18 +1,70 @@
 cmake_minimum_required(VERSION 3.13)
-project(tiny_rasterizer)
+set(LANG CXX)
+if(APPLE)
+    set(CMAKE_C_COMPILER /usr/bin/clang++)
+    set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+    set(LANG ${LANG} OBJCXX)
+endif()
+project(tiny_rasterizer VERSION 0.0.1 LANGUAGES ${LANG})
 
 set(CMAKE_CXX_STANDARD 17)
-
+set(TARGET rasterizer)
 include_directories(./)
 
-find_package(glfw3 3.3 REQUIRED)
+set(SOURCES
+    rasterizer/Shader.cpp
+    rasterizer/Math.cpp
+    utils/Measure.cpp
+    lib/lodepng.cpp
+    main.cpp
+)
+set(HEADERS 
+    lib/lodepng.h
+    lib/OBJ_Loader.h
+    utils/ObjParser.hpp
+    utils/Measure.hpp
+    rasterizer/Scene.hpp
+    rasterizer/Camera.hpp 
+    rasterizer/Shader.hpp
+    rasterizer/Model.hpp
+    rasterizer/Triangle.hpp
+    rasterizer/Light.hpp
+    rasterizer/Material.hpp
+    rasterizer/Math.hpp
+    rasterizer/Texture.hpp
+    rasterizer/scenes/SceneManager.hpp
+    graphics/Viewer.hpp
+    graphics/platform.h
+)
 
-set(SOURCE_FILES main.cc utils/ObjParser.hpp rasterizer/Scene.hpp rasterizer/Camera.hpp 
-                    rasterizer/Shader.hpp rasterizer/Model.hpp rasterizer/Triangle.hpp
-                    rasterizer/Light.hpp rasterizer/Material.hpp
-                    rasterizer/Math.hpp window/Window.hpp
-                    rasterizer/Texture.hpp
-                    lib/lodepng.h lib/lodepng.cpp lib/OBJ_Loader.h)
+if(APPLE)
+    set(SOURCES ${SOURCES} graphics/macos.mm)
+endif()
+add_executable(${TARGET} ${HEADERS} ${SOURCES})
 
-add_executable(rasterizer ${SOURCE_FILES})
-target_link_libraries(rasterizer glfw)
+# ASSETS
+set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")
+set(ASSETS_DST "$<TARGET_FILE_DIR:${TARGET}>/assets")
+
+if(WIN32)
+    set(ASSETS_CMD copy_directory)
+    set(ASSETS_MSG "Copy assets")
+else()
+    set(ASSETS_CMD create_symlink)
+    set(ASSETS_MSG "Link assets")
+endif()
+
+add_custom_command(
+    TARGET ${TARGET} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo
+    "${ASSETS_MSG}: ${ASSETS_SRC} to ${ASSETS_DST}"
+)
+add_custom_command(
+    TARGET ${TARGET} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E ${ASSETS_CMD}
+    "${ASSETS_SRC}" "${ASSETS_DST}"
+)
+
+if(APPLE)
+    target_link_libraries(${TARGET} PRIVATE "-framework Cocoa")
+endif()

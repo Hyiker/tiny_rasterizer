@@ -1,6 +1,7 @@
 #ifndef LIGHT_HPP
 #define LIGHT_HPP
 
+#include "rasterizer/Math.hpp"
 namespace Rasterizer {
 struct Light {
     Vec3 position;

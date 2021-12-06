@@ -105,5 +105,5 @@ Temporary Items
 .vscode/
 build/
 out/
-assets/
 .VSCodeCounter
+!assets/**

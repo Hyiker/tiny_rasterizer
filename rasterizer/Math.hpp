@@ -3,7 +3,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
-#define DEG2RAD(d) ((d) / 180 * M_PI)
+#define DEG2RAD(d) ((float(d)) / 180.0f * M_PI)
 namespace Rasterizer {
 
 // each color portion regularized to [0, 1]
@@ -209,40 +209,14 @@ class Vec3 {
     friend Vec3 operator*(const Vec3&, float);
     friend Vec3 operator/(const Vec3&, float);
 };
-Vec3 operator*(float coe, const Vec3& v) {
-    return Vec3(v.x * coe, v.y * coe, v.z * coe);
-}
-Vec3 operator*(const Vec3& v, float coe) {
-    return Vec3(v.x * coe, v.y * coe, v.z * coe);
-}
-Vec3 operator/(const Vec3& v, float coe) {
-    coe = 1 / coe;
-    return coe * Vec3(v.x, v.y, v.z);
-}
-Vec4 operator/(const Vec4& v, float coe) {
-    return Vec4(v.x / coe, v.y / coe, v.z / coe, v.w / coe);
-}
 
-std::ostream& operator<<(std::ostream& os, const Vec3& v) {
-    os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-    return os;
-}
-std::ostream& operator<<(std::ostream& os, const Vec4& v) {
-    os << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
-    return os;
-}
-std::ostream& operator<<(std::ostream& os, const Mat4& mat) {
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            os << mat.m[i][j];
-            if (j != 3) {
-                os << ", ";
-            }
-        }
-        os << '\n';
-    }
-    return os;
-}
+Rasterizer::Vec3 operator*(float coe, const Rasterizer::Vec3& v);
+Rasterizer::Vec3 operator*(const Rasterizer::Vec3& v, float coe);
+Rasterizer::Vec3 operator/(const Rasterizer::Vec3& v, float coe);
+Rasterizer::Vec4 operator/(const Rasterizer::Vec4& v, float coe);
+std::ostream& operator<<(std::ostream& os, const Rasterizer::Vec3& v);
+std::ostream& operator<<(std::ostream& os, const Rasterizer::Vec4& v);
+std::ostream& operator<<(std::ostream& os, const Rasterizer::Mat4& mat);
 }  // namespace Rasterizer
 
 namespace math {

@@ -1,5 +1,5 @@
-#ifndef SCENE_HPP
-#define SCENE_HPP
+#ifndef SCENE_H
+#define SCENE_H
 #include <cmath>
 #include <fstream>
 #include <functional>
@@ -35,6 +35,7 @@ class Scene {
     std::vector<Model*> models;
     std::vector<Light> lights;
     Shader fragment_shader;
+    Scene() = default;
 
     // defaultly, look from 0, 0, 5 along the negative z axis
     Scene(int width, int height, Shader fragment_shader = normalFragmentShader)
@@ -61,7 +62,6 @@ class Scene {
             Mat4 norm_mat =
                 (cam.getViewMatrix() * model_matrix).inverse().transpose();
             for (const auto triangle : model->triangles) {
-                std::cout << "\rRendering triangle " << tcnt++ << "   ";
                 std::array<Vertex, 3>& vertices = triangle->v;
                 std::array<Vertex, 3> t_vertices;
                 std::array<Vec3, 3> view_pos;
@@ -183,14 +183,15 @@ class Scene {
             exit(1);
         }
     }
-    ~Scene() {
-        for (auto& model : models) {
-            delete model;
-            model = nullptr;
+    void clear() {
+        for (int i = 0; i < height; i++) {
+            std::fill(pixels[i].begin(), pixels[i].end(), RGBColor(0, 0, 0));
+            std::fill(zbuffer[i].begin(), zbuffer[i].end(),
+                      std::numeric_limits<float>::infinity());
         }
     }
 };
 
 }  // namespace Rasterizer
 
-#endif /* SCENE_HPP */
+#endif /* SCENE_H */
