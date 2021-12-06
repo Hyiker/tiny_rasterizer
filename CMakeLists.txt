@@ -21,6 +21,7 @@ set(SOURCES
 set(HEADERS 
     lib/lodepng.h
     lib/OBJ_Loader.h
+    utils/GitHelper.hpp
     utils/ObjParser.hpp
     utils/Measure.hpp
     rasterizer/Scene.hpp
@@ -41,8 +42,9 @@ if(APPLE)
     set(SOURCES ${SOURCES} graphics/macos.mm)
 endif()
 add_executable(${TARGET} ${HEADERS} ${SOURCES})
-
+##################################################
 # ASSETS
+##################################################
 set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")
 set(ASSETS_DST "$<TARGET_FILE_DIR:${TARGET}>/assets")
 
@@ -68,3 +70,39 @@ add_custom_command(
 if(APPLE)
     target_link_libraries(${TARGET} PRIVATE "-framework Cocoa")
 endif()
+
+##################################################
+# BENCHMARK
+##################################################
+# Get git hash branch name: https://zhuanlan.zhihu.com/p/57319492
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(Utility)
+set(GIT_HASH "")
+get_git_hash(GIT_HASH)
+message(STATUS "Git hash is ${GIT_HASH}")
+
+# 获取当前的分支
+set(GIT_BRANCH "")
+get_git_branch(GIT_BRANCH)
+message(STATUS "Git branch is ${GIT_BRANCH}")
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/utils/GitHelper.hpp.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/utils/GitHelper.hpp
+  @ONLY
+)
+
+set(BENCH_TARGET bench)
+
+set(BENCH_HEADERS
+    rasterizer/Math.hpp
+    benchmark/MathBench.hpp
+    utils/GitHelper.hpp
+    utils/Measure.hpp
+)
+set(BENCH_SOURCES
+    rasterizer/Math.cpp
+    benchmark/BenchMain.cpp
+    utils/Measure.cpp
+)
+
+add_executable(${BENCH_TARGET} ${BENCH_SOURCES} ${BENCH_HEADERS})

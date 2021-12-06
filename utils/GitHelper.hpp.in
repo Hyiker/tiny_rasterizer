@@ -1,0 +1,8 @@
+#ifndef GITHELPER_HPP
+#define GITHELPER_HPP
+#include <string>
+
+const std::string GIT_BRANCH = "@GIT_BRANCH@";
+const std::string GIT_HASH = "@GIT_HASH@";
+
+#endif /* GITHELPER_HPP */
