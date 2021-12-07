@@ -29,6 +29,14 @@ int main() {
     BENCH(Mat4xMat4_100000);
     BENCH(Mat4xMat4_10000000);
     BENCH(Mat4xMat4_100000000);
+
+    BENCH(Mat4Transpose_100000);
+    BENCH(Mat4Transpose_10000000);
+    BENCH(Mat4Transpose_100000000);
+
+    BENCH(Mat4Inv_10000);
+    BENCH(Mat4Inv_1000000);
+
     std::string filename("../benchmark/results/" + GIT_BRANCH + "-" + GIT_HASH +
                          ".txt");
     BenchHelper::writeToFile(filename);

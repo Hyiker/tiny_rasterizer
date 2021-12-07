@@ -35,3 +35,17 @@ std::ostream& Rasterizer::operator<<(std::ostream& os, const Mat4& mat) {
     }
     return os;
 }
+
+#ifndef OPT_NEON
+Mat4 Rasterizer::Mat4::operator*(const Mat4& mat) const {
+    Mat4 result;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            for (int k = 0; k < 4; k++) {
+                result.m[i][j] += m[i][k] * mat.m[k][j];
+            }
+        }
+    }
+    return std::move(result);
+}
+#endif

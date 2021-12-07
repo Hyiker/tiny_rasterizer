@@ -1,8 +1,15 @@
-#ifndef MATH_HPP
-#define MATH_HPP
+#ifndef MATH_H
+#define MATH_H
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
+#define OPT_EN
+#ifdef OPT_EN
+#if __has_include(<arm_neon.h>)
+#define OPT_NEON
+#endif
+#endif
 #define DEG2RAD(d) ((float(d)) / 180.0f * M_PI)
 namespace Rasterizer {
 
@@ -34,12 +41,8 @@ class Mat4 {
     };
 
    public:
-    std::array<std::array<float, 4>, 4> m;
-    Mat4() {
-        for (int i = 0; i < 4; i++) {
-            m[i].fill(0);
-        }
-    };
+    float m[4][4];
+    Mat4() { std::memset(m, 0, sizeof(m)); };
 
     template <typename N>
     MatProxy operator<<(N number) {
@@ -61,17 +64,7 @@ class Mat4 {
                    m[3][3] * vec.w;
         return std::move(result);
     }
-    Mat4 operator*(const Mat4& mat) const {
-        Mat4 result;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                for (int k = 0; k < 4; k++) {
-                    result.m[i][j] += m[i][k] * mat.m[k][j];
-                }
-            }
-        }
-        return std::move(result);
-    }
+    Mat4 operator*(const Mat4& mat) const;
     Mat4 operator/(float div) const {
         Mat4 result;
         for (int i = 0; i < 4; i++) {
@@ -229,4 +222,4 @@ T lerp(float r, T v0, T v1) {
     return r * v0 + (1.0f - r) * v1;
 }
 }  // namespace math
-#endif /* MATH_HPP */
+#endif /* MATH_H */

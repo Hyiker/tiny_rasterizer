@@ -50,6 +50,9 @@ class Viewer {
                     rotation << 1, 0, 0, 0, 0, std::cos(a), -std::sin(a), 0, 0,
                         std::sin(a), std::cos(a), 0, 0, 0, 0, 1;
                     break;
+                case KEY_SPACE:
+                case KEY_NUM:
+                    break;
             }
             scene->models[0]->transform =
                 rotation * scene->models[0]->transform;

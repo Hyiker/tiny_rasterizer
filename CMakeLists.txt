@@ -38,10 +38,36 @@ set(HEADERS
     graphics/platform.h
 )
 
+set(BENCH_HEADERS
+    rasterizer/Math.hpp
+    benchmark/MathBench.hpp
+    utils/GitHelper.hpp
+    utils/Measure.hpp
+)
+
+set(BENCH_SOURCES
+    rasterizer/Math.cpp
+    benchmark/BenchMain.cpp
+    utils/Measure.cpp
+)
+##################################################
+# ARCHITECTURE SPECIFICATION
+##################################################
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(arm64)|(arm32)")
+    message("DETECTED ARCHITECTURE " ${CMAKE_SYSTEM_PROCESSOR} ", OPTIMIZING USING NEON")
+    set(SOURCES rasterizer/math_arch/MathNeon.cpp ${SOURCES})
+    set(BENCH_SOURCES rasterizer/math_arch/MathNeon.cpp ${BENCH_SOURCES})
+else()
+    message("DETECTED ARCHITECTURE " ${CMAKE_SYSTEM_PROCESSOR} ", OPTIMIZING USING NEON")
+endif()
+
+
 if(APPLE)
     set(SOURCES ${SOURCES} graphics/macos.mm)
 endif()
+
 add_executable(${TARGET} ${HEADERS} ${SOURCES})
+
 ##################################################
 # ASSETS
 ##################################################
@@ -55,6 +81,7 @@ else()
     set(ASSETS_CMD create_symlink)
     set(ASSETS_MSG "Link assets")
 endif()
+
 
 add_custom_command(
     TARGET ${TARGET} POST_BUILD
@@ -81,7 +108,6 @@ set(GIT_HASH "")
 get_git_hash(GIT_HASH)
 message(STATUS "Git hash is ${GIT_HASH}")
 
-# 获取当前的分支
 set(GIT_BRANCH "")
 get_git_branch(GIT_BRANCH)
 message(STATUS "Git branch is ${GIT_BRANCH}")
@@ -93,16 +119,5 @@ configure_file(
 
 set(BENCH_TARGET bench)
 
-set(BENCH_HEADERS
-    rasterizer/Math.hpp
-    benchmark/MathBench.hpp
-    utils/GitHelper.hpp
-    utils/Measure.hpp
-)
-set(BENCH_SOURCES
-    rasterizer/Math.cpp
-    benchmark/BenchMain.cpp
-    utils/Measure.cpp
-)
 
 add_executable(${BENCH_TARGET} ${BENCH_SOURCES} ${BENCH_HEADERS})

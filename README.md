@@ -22,7 +22,8 @@ This is my own rasterizer implementation. Developed in C++17.
     - [x] MacOS
     - [ ] Linux(Ubuntu?)
     - [ ] Window
-- [ ] math acceleration
+- [x] math acceleration
+    - [x] Arm64 Mat4 Multiplication
 - [ ] hard shadow
 - [ ] soft shadow
 - [ ] shader language support(Optional)
