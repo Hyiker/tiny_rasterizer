@@ -11,5 +11,6 @@ int main(int argc, char const* argv[]) {
     Viewer viewer;
     viewer.load(argv[1]);
     viewer.show();
+    viewer.scene->dumpToPNG(string("../images/") + argv[1] + ".png");
     return 0;
 }
