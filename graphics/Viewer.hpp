@@ -54,8 +54,11 @@ class Viewer {
                 case KEY_NUM:
                     break;
             }
-            scene->models[0]->transform =
-                rotation * scene->models[0]->transform;
+            for (int i = 0; i < scene->models.size(); i++) {
+                scene->models[i]->transform =
+                    rotation * scene->models[i]->transform;
+            }
+
             scene->clear();
         };
         input_set_callbacks(wd, wd_cb);

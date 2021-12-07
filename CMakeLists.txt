@@ -14,12 +14,14 @@ include_directories(./)
 set(SOURCES
     rasterizer/Shader.cpp
     rasterizer/Math.cpp
+    lib/tga.cpp
     utils/Measure.cpp
     lib/lodepng.cpp
     main.cpp
 )
 set(HEADERS 
     lib/lodepng.h
+    lib/tga.hpp
     lib/OBJ_Loader.h
     utils/GitHelper.hpp
     utils/ObjParser.hpp
@@ -33,6 +35,7 @@ set(HEADERS
     rasterizer/Material.hpp
     rasterizer/Math.hpp
     rasterizer/Texture.hpp
+    rasterizer/Mesh.hpp
     rasterizer/scenes/SceneManager.hpp
     graphics/Viewer.hpp
     graphics/platform.h

@@ -22,8 +22,9 @@ This is my own rasterizer implementation. Developed in C++17.
     - [x] MacOS
     - [ ] Linux(Ubuntu?)
     - [ ] Window
-- [x] math acceleration
+- [x] Acceleration
     - [x] Arm64 Mat4 Multiplication
+    - [ ] VFC culling
 - [ ] hard shadow
 - [ ] soft shadow
 - [ ] shader language support(Optional)
@@ -32,12 +33,13 @@ This is my own rasterizer implementation. Developed in C++17.
 
 - [LodePNG](https://github.com/lvandeve/lodepng) Load PNG format texture. (Header Only)
 - [OBJ Loader](https://github.com/Bly7/OBJ-Loader) Load .obj model file (Header Only)
+- [TGA](https://github.com/ColumbusUtrigas/TGA) Load TGA format texture (Header Only)
 
 ## Render Samples
 
-![Cow](./images/cow_text.png)
+![Cow](./images/rem.png)
 
-GAMES101 Assignment's cow with texture & lighting model.
+Rem with texture & lighting model.
 
 ![Shoe](./images/shoe_text.png)
 

@@ -1,5 +1,5 @@
-#ifndef OBJ_PARSER
-#define OBJ_PARSER
+#ifndef OBJPARSER_H
+#define OBJPARSER_H
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -7,6 +7,7 @@
 
 #include "lib/OBJ_Loader.h"
 #include "rasterizer/Material.hpp"
+#include "rasterizer/Mesh.hpp"
 #include "rasterizer/Model.hpp"
 #include "rasterizer/Triangle.hpp"
 
@@ -19,6 +20,7 @@ Rasterizer::Model* parseOBJ(const std::string& filename) {
     objl::Loader loader;
     bool loadout = loader.LoadFile(filename);
     for (auto mesh : loader.LoadedMeshes) {
+        Rasterizer::Mesh* pm = new Rasterizer::Mesh();
         Rasterizer::Material* mesh_material = new Rasterizer::Material();
         mesh_material->name = mesh.MeshMaterial.name;
         mesh_material->illum = mesh.MeshMaterial.illum;
@@ -26,6 +28,15 @@ Rasterizer::Model* parseOBJ(const std::string& filename) {
         mesh_material->Ka = to_vec3(mesh.MeshMaterial.Ka);
         mesh_material->Ks = to_vec3(mesh.MeshMaterial.Ks);
         mesh_material->Kd = to_vec3(mesh.MeshMaterial.Kd);
+        mesh_material->Ni = mesh.MeshMaterial.Ni;
+        mesh_material->d = mesh.MeshMaterial.d;
+        mesh_material->map_Kd = mesh.MeshMaterial.map_Kd;
+        if (mesh.MeshMaterial.map_Kd.length() > 0) {
+            std::cout << "loading texture " << mesh_material->map_Kd
+                      << std::endl;
+            pm->texture =
+                Rasterizer::Texture::loadTGATexture(mesh_material->map_Kd);
+        }
         for (int i = 0; i < mesh.Indices.size(); i += 3) {
             Rasterizer::Triangle* t = new Rasterizer::Triangle();
             for (int j = 0; j < 3; j++) {
@@ -38,10 +49,11 @@ Rasterizer::Model* parseOBJ(const std::string& filename) {
                     Rasterizer::Vec3(vertex.TextureCoordinate.X,
                                      vertex.TextureCoordinate.Y, 0.0);
             }
-            t->material = mesh_material;
-            model->addTriangle(t);
+            pm->triangles.emplace_back(t);
         }
+        pm->material = mesh_material;
+        model->meshes.emplace_back(pm);
     }
     return model;
 }
-#endif /* OBJ_PARSER */
+#endif /* OBJPARSER_H */

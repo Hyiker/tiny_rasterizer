@@ -87,8 +87,9 @@ RGBColor Rasterizer::textureFragmentShaderNoLight(
     if (!payload.texture) {
         return RGBColor(1.0);
     }
-    RGBColor texture_color = payload.texture->getRGBBilinear(
-        payload.texture_coord.x, payload.texture_coord.y);
+    RGBColor texture_color = payload.texture->getRGB(
+        payload.texture_coord.x, payload.texture_coord.y,
+        Rasterizer::TextureWrapMode::REPEAT);
     // coefficients for ambient, diffuse and specular lighting
     return texture_color;
 }

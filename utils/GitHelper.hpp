@@ -3,6 +3,6 @@
 #include <string>
 
 const std::string GIT_BRANCH = "master";
-const std::string GIT_HASH = "f97e566";
+const std::string GIT_HASH = "d0e3791";
 
 #endif /* GITHELPER_HPP */

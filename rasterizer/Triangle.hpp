@@ -24,11 +24,8 @@ class Vertex {
 class Triangle {
    public:
     std::array<Vertex, 3> v;
-    // TODO: use mesh to hold material payload
-    Material* material;
     Triangle() = default;
-    Triangle(const std::array<Vertex, 3>& v, Material* material = nullptr)
-        : v{v}, material{material} {}
+    Triangle(const std::array<Vertex, 3>& v) : v{v} {}
     bool inside(const Rasterizer::Vec3& p, bool remove_z = true) const {
         // get 3 edge vector and point-vertex vector
         Rasterizer::Vec3 e1 = v[0].coord - p, e2 = v[1].coord - p,

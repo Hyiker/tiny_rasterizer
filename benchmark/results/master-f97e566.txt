@@ -1,8 +1,8 @@
-Mat4xMat4_100000: 2ms
-Mat4xMat4_10000000: 109ms
-Mat4xMat4_100000000: 877ms
+Mat4xMat4_100000: 1ms
+Mat4xMat4_10000000: 89ms
+Mat4xMat4_100000000: 875ms
 Mat4Transpose_100000: 0ms
 Mat4Transpose_10000000: 1ms
 Mat4Transpose_100000000: 8ms
-Mat4Inv_10000: 12ms
+Mat4Inv_10000: 11ms
 Mat4Inv_1000000: 1139ms

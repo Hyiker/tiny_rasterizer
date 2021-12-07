@@ -61,38 +61,41 @@ class Scene {
             Mat4 model_matrix = model->getModelMatrix();
             Mat4 norm_mat =
                 (cam.getViewMatrix() * model_matrix).inverse().transpose();
-            for (const auto triangle : model->triangles) {
-                std::array<Vertex, 3>& vertices = triangle->v;
-                std::array<Vertex, 3> t_vertices;
-                std::array<Vec3, 3> view_pos;
-                for (int i = 0; i < 3; i++) {
-                    Vec4 transformed4(proj_mat * model_matrix *
-                                      vertices[i].coord.toVec4(1.0f));
-                    Vec3 transformed(transformed4);
-                    transformed = transformed / transformed4.w;
+            for (const auto mesh : model->meshes) {
+                for (const auto triangle : mesh->triangles) {
+                    std::array<Vertex, 3>& vertices = triangle->v;
+                    std::array<Vertex, 3> t_vertices;
+                    std::array<Vec3, 3> view_pos;
+                    for (int i = 0; i < 3; i++) {
+                        Vec4 transformed4(proj_mat * model_matrix *
+                                          vertices[i].coord.toVec4(1.0f));
+                        Vec3 transformed(transformed4);
+                        transformed = transformed / transformed4.w;
 
-                    t_vertices[i].coord = std::move(transformed);
-                    t_vertices[i].coord.x =
-                        0.5 * width * (t_vertices[i].coord.x + 1.0);
-                    t_vertices[i].coord.y =
-                        0.5 * height * (t_vertices[i].coord.y + 1.0);
-                    t_vertices[i].coord.z = t_vertices[i].coord.z * f1 + f2;
-                    t_vertices[i].normal =
-                        Vec3(norm_mat * vertices[i].normal.toVec4(0.0f))
-                            .normalized();
-                    t_vertices[i].texture_coord = vertices[i].texture_coord;
-                    t_vertices[i].color = RGBColor(148, 121, 92);
-                    view_pos[i] = Vec3(view_mat * model_matrix *
-                                       vertices[i].coord.toVec4(1.0f));
+                        t_vertices[i].coord = std::move(transformed);
+                        t_vertices[i].coord.x =
+                            0.5 * width * (t_vertices[i].coord.x + 1.0);
+                        t_vertices[i].coord.y =
+                            0.5 * height * (t_vertices[i].coord.y + 1.0);
+                        t_vertices[i].coord.z = t_vertices[i].coord.z * f1 + f2;
+                        t_vertices[i].normal =
+                            Vec3(norm_mat * vertices[i].normal.toVec4(0.0f))
+                                .normalized();
+                        t_vertices[i].texture_coord = vertices[i].texture_coord;
+                        t_vertices[i].color = RGBColor(148, 121, 92);
+                        view_pos[i] = Vec3(view_mat * model_matrix *
+                                           vertices[i].coord.toVec4(1.0f));
+                    }
+                    // for each triangle, check if pixel is inside
+                    Triangle t_tri(t_vertices);
+
+                    this->draw(t_tri, view_pos, mesh->texture, mesh->material);
                 }
-                // for each triangle, check if pixel is inside
-                Triangle t_tri(t_vertices, triangle->material);
-                this->draw(t_tri, view_pos, model->texture);
             }
         }
     }
     void draw(const Triangle& triangle, const std::array<Vec3, 3>& view_pos,
-              Texture* tex) {
+              Texture* tex, Material* material) {
         Vec3 bounding_box[2] = {Vec3(width, height, 0), Vec3(0, 0, 0)};
         for (auto& vertex : triangle.v) {
             float u = vertex.coord.x;
@@ -132,7 +135,7 @@ class Scene {
                             triangle.interpolateColor(alpha, beta, gamma);
                         payload.eye_pos = cam.eye_pos;
                         payload.lights = this->lights;
-                        payload.material = triangle.material;
+                        payload.material = material;
                         pixels[y][x] = fragment_shader(payload);
                         zbuffer[y][x] = z;
                     }

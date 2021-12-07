@@ -11,6 +11,7 @@
 #endif
 #endif
 #define DEG2RAD(d) ((float(d)) / 180.0f * M_PI)
+#define EPSILON 0.001f
 namespace Rasterizer {
 
 // each color portion regularized to [0, 1]

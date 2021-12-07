@@ -38,7 +38,7 @@
 #include <math.h>
 
 // Print progress to console while loading (large models)
-// #define OBJL_CONSOLE_OUTPUT
+#define OBJL_CONSOLE_OUTPUT
 
 // Namespace: OBJL
 //
@@ -596,10 +596,11 @@ class Loader {
                     }
                 }
 
+                std::string pathpre = pathtomat;
                 pathtomat += algorithm::tail(curline);
 
                 // Load Materials
-                LoadMaterials(pathtomat);
+                LoadMaterials(pathtomat, pathpre);
             }
         }
 
@@ -905,7 +906,7 @@ class Loader {
     }
 
     // Load Materials from .mtl file
-    bool LoadMaterials(std::string path) {
+    bool LoadMaterials(std::string path, std::string pathpre) {
         algorithm::rtrim(path);
         // If the file is not a material file return false
         if (path.substr(path.length() - 4, 4) != ".mtl") {
@@ -1014,15 +1015,15 @@ class Loader {
             }
             // Ambient Texture Map
             if (algorithm::firstToken(curline) == "map_Ka") {
-                tempMaterial.map_Ka = algorithm::tail(curline);
+                tempMaterial.map_Ka = pathpre + algorithm::tail(curline);
             }
             // Diffuse Texture Map
             if (algorithm::firstToken(curline) == "map_Kd") {
-                tempMaterial.map_Kd = algorithm::tail(curline);
+                tempMaterial.map_Kd = pathpre + algorithm::tail(curline);
             }
             // Specular Texture Map
             if (algorithm::firstToken(curline) == "map_Ks") {
-                tempMaterial.map_Ks = algorithm::tail(curline);
+                tempMaterial.map_Ks = pathpre + algorithm::tail(curline);
             }
             // Specular Hightlight Map
             if (algorithm::firstToken(curline) == "map_Ns") {
