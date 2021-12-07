@@ -14,7 +14,14 @@
 #include "rasterizer/Shader.hpp"
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
+
 namespace Rasterizer {
+
+static constexpr int SSAA_SAMPLE_RATIO = 2;
+static constexpr int SSAA_SAMPLE_RATIO_SQR =
+    (SSAA_SAMPLE_RATIO * SSAA_SAMPLE_RATIO);
+static constexpr float SSAA_SAMPLE_STEP = (1.f / float(SSAA_SAMPLE_RATIO));
+static constexpr float SSAA_SAMPLE_OFFSET = (0.5f / float(SSAA_SAMPLE_RATIO));
 class Scene {
    private:
     // remove triangles unvisible to camera
@@ -31,7 +38,9 @@ class Scene {
     int width;
     int height;
     std::vector<std::vector<RGBColor>> pixels;
-    std::vector<std::vector<float>> zbuffer;
+    std::vector<std::vector<std::array<float, SSAA_SAMPLE_RATIO_SQR>>> zbuffer;
+    std::vector<std::vector<std::array<RGBColor, SSAA_SAMPLE_RATIO_SQR>>>
+        colorbuffer;
     std::vector<Model*> models;
     std::vector<Light> lights;
     Shader fragment_shader;
@@ -41,13 +50,19 @@ class Scene {
     Scene(int width, int height, Shader fragment_shader = normalFragmentShader)
         : width{width}, height{height}, fragment_shader{fragment_shader} {
         pixels.resize(height);
+        colorbuffer.resize(height);
         zbuffer.resize(height);
         for (int i = 0; i < height; i++) {
             pixels[i].resize(width);
             zbuffer[i].resize(width);
+            colorbuffer[i].resize(width);
             std::fill(pixels[i].begin(), pixels[i].end(), RGBColor(0, 0, 0));
-            std::fill(zbuffer[i].begin(), zbuffer[i].end(),
-                      std::numeric_limits<float>::infinity());
+            for (int j = 0; j < width; j++) {
+                std::fill(zbuffer[i][j].begin(), zbuffer[i][j].end(),
+                          std::numeric_limits<float>::infinity());
+                std::fill(colorbuffer[i][j].begin(), colorbuffer[i][j].end(),
+                          RGBColor(0.0f));
+            }
         }
     }
     void render() {
@@ -111,34 +126,46 @@ class Scene {
         }
         for (int y = bounding_box[0].y; y < bounding_box[1].y; y++) {
             for (int x = bounding_box[0].x; x < bounding_box[1].x; x++) {
-                float xf = float(x) + 0.5, yf = float(y) + 0.5;
-                if (triangle.inside(Vec3(xf, yf, 0.0))) {
-                    auto [alpha, beta, gamma] =
-                        triangle.computeBarycentric2D(xf, yf);
-                    float z = triangle.interpolateZ(alpha, beta, gamma);
-                    if (z < zbuffer[y][x]) {
-                        Vec3 normal =
-                            triangle.interpolateNormal(alpha, beta, gamma)
-                                .normalized();
-                        Vec3 view_position = view_pos[0] * alpha +
-                                             view_pos[1] * beta +
-                                             view_pos[2] * gamma;
-                        FragmentShaderPayload payload;
-                        payload.normal = normal;
-                        payload.view_position = view_position;
-                        payload.screen_position = Vec3(xf, yf, 0.0f);
-                        payload.texture = tex;
-                        payload.texture_coord =
-                            triangle.interpolateTextureCoord(alpha, beta,
-                                                             gamma);
-                        payload.color =
-                            triangle.interpolateColor(alpha, beta, gamma);
-                        payload.eye_pos = cam.eye_pos;
-                        payload.lights = this->lights;
-                        payload.material = material;
-                        pixels[y][x] = fragment_shader(payload);
-                        zbuffer[y][x] = z;
+                int inside_cnt = 0;
+                RGBColor color(0);
+                for (int i = 0; i < SSAA_SAMPLE_RATIO_SQR; i++) {
+                    float xf = float(x) + SSAA_SAMPLE_OFFSET +
+                               SSAA_SAMPLE_STEP * float(i % SSAA_SAMPLE_RATIO),
+                          yf = float(y) + SSAA_SAMPLE_OFFSET +
+                               SSAA_SAMPLE_STEP * float(i / SSAA_SAMPLE_RATIO);
+                    if (triangle.inside(Vec3(xf, yf, 0.0))) {
+                        auto [alpha, beta, gamma] =
+                            triangle.computeBarycentric2D(xf, yf);
+                        float z = triangle.interpolateZ(alpha, beta, gamma);
+                        if (z < zbuffer[y][x][i]) {
+                            inside_cnt++;
+                            Vec3 normal =
+                                triangle.interpolateNormal(alpha, beta, gamma)
+                                    .normalized();
+                            Vec3 view_position = view_pos[0] * alpha +
+                                                 view_pos[1] * beta +
+                                                 view_pos[2] * gamma;
+                            FragmentShaderPayload payload;
+                            payload.normal = normal;
+                            payload.view_position = view_position;
+                            payload.screen_position = Vec3(xf, yf, 0.0f);
+                            payload.texture = tex;
+                            payload.texture_coord =
+                                triangle.interpolateTextureCoord(alpha, beta,
+                                                                 gamma);
+                            payload.color =
+                                triangle.interpolateColor(alpha, beta, gamma);
+                            payload.eye_pos = cam.eye_pos;
+                            payload.lights = this->lights;
+                            payload.material = material;
+                            colorbuffer[y][x][i] = fragment_shader(payload);
+                            zbuffer[y][x][i] = z;
+                        }
                     }
+                    color = color + colorbuffer[y][x][i];
+                }
+                if (inside_cnt != 0) {
+                    pixels[y][x] = color / SSAA_SAMPLE_RATIO_SQR;
                 }
             }
         }
@@ -189,8 +216,12 @@ class Scene {
     void clear() {
         for (int i = 0; i < height; i++) {
             std::fill(pixels[i].begin(), pixels[i].end(), RGBColor(0, 0, 0));
-            std::fill(zbuffer[i].begin(), zbuffer[i].end(),
-                      std::numeric_limits<float>::infinity());
+            for (int j = 0; j < width; j++) {
+                std::fill(zbuffer[i][j].begin(), zbuffer[i][j].end(),
+                          std::numeric_limits<float>::infinity());
+                std::fill(colorbuffer[i][j].begin(), colorbuffer[i][j].end(),
+                          RGBColor(0.0f));
+            }
         }
     }
 };
