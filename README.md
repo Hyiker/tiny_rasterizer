@@ -8,7 +8,7 @@ This is my own rasterizer implementation. Developed in C++17.
 ## Usage
 
 1. compile
-2. `./rasterizer [model]`, model names plz refer to [](./assets/README.md)
+2. `./rasterizer [model]`, model names plz refer to [this README](./assets/README.md)
 
 ## Roadmap
 
