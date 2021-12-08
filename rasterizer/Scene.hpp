@@ -68,7 +68,8 @@ class Scene {
     void render() {
         Mat4 proj_mat = getTransformMatrix();
         Mat4 view_mat = cam.getViewMatrix();
-        float f1 = (50.f - 0.1f) / 2.0f, f2 = (50.f + 0.1f) / 2.0f;
+        float f1 = (cam.far - cam.near) / 2.0f,
+              f2 = (cam.far + cam.near) / 2.0f;
 
         std::vector<Triangle> transformed_triangles;
         int tcnt = 0;
@@ -91,7 +92,7 @@ class Scene {
                         t_vertices[i].coord.x =
                             0.5 * width * (t_vertices[i].coord.x + 1.0);
                         t_vertices[i].coord.y =
-                            0.5 * height * (t_vertices[i].coord.y + 1.0);
+                            0.5 * height * (-t_vertices[i].coord.y + 1.0);
                         t_vertices[i].coord.z = t_vertices[i].coord.z * f1 + f2;
                         t_vertices[i].normal =
                             Vec3(norm_mat * vertices[i].normal.toVec4(0.0f))
@@ -137,6 +138,7 @@ class Scene {
                         auto [alpha, beta, gamma] =
                             triangle.computeBarycentric2D(xf, yf);
                         float z = triangle.interpolateZ(alpha, beta, gamma);
+
                         if (z < zbuffer[y][x][i]) {
                             inside_cnt++;
                             Vec3 normal =

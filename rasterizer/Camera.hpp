@@ -24,8 +24,8 @@ class Camera {
           near{near},
           far{far} {
         float fov_rad = DEG2RAD(fov);
-        height = 2.0f * near * std::tan(fov_rad * 0.5f);
-        width = height * aspect_ratio;
+        height = -(2.0f * this->near * std::tan(fov_rad * 0.5f));
+        width = (this->height * aspect_ratio);
     }
     Mat4 getProjectionMatrix() {
         Mat4 projection;

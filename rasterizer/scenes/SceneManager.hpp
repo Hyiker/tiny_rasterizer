@@ -30,8 +30,10 @@ struct SceneManager {
     }
 
     static Scene* getRemScene() {
-        Vec3 eye_pos(0, 1.2, 3), up(0, 1, 0), center(0, 0.5, 0);
-        Camera cam(45, 1.0f, eye_pos, up, center, 0.1, 30);
+        Vec3 eye_pos(0, 1.2, 3), center(0, 0.5, 0),
+            up((center - eye_pos).cross(Vec3(-1, 0, 0)).normalized());
+        std::cout << up << std::endl;
+        Camera cam(45, 1.0f, eye_pos, up, center, 0.1, 50);
         Scene* scene = new Scene(800, 800, textureFragmentShader);
         Model* model = parseOBJ("assets/rem/Rem.obj");
         scene->addModel(model);
