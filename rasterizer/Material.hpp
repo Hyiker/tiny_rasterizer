@@ -3,9 +3,17 @@
 #include <string>
 
 #include "rasterizer/Math.hpp"
+#include "rasterizer/Texture.hpp"
 namespace Rasterizer {
 struct Material {
-    Material() : Ns{0.0f}, Ni{0.0f}, d{0.0f}, illum{0} {}
+    Material()
+        : Ns{0.0f},
+          Ni{0.0f},
+          d{0.0f},
+          illum{0},
+          Ka_tex{nullptr},
+          Kd_tex{nullptr},
+          Ks_tex{nullptr} {}
 
     // Material Name
     std::string name;
@@ -35,6 +43,9 @@ struct Material {
     std::string map_d;
     // Bump Map
     std::string map_bump;
+    Texture* Ka_tex;
+    Texture* Kd_tex;
+    Texture* Ks_tex;
 };
 }  // namespace Rasterizer
 

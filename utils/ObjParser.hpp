@@ -32,10 +32,24 @@ Rasterizer::Model* parseOBJ(const std::string& filename) {
         mesh_material->d = mesh.MeshMaterial.d;
         mesh_material->map_Kd = mesh.MeshMaterial.map_Kd;
         if (mesh.MeshMaterial.map_Kd.length() > 0) {
-            std::cout << "loading texture " << mesh_material->map_Kd
+            std::cout << "loading Kd texture " << mesh_material->map_Kd
                       << std::endl;
-            pm->texture =
+            mesh_material->Kd_tex =
                 Rasterizer::Texture::loadTGATexture(mesh_material->map_Kd);
+        }
+
+        if (mesh.MeshMaterial.map_Ks.length() > 0) {
+            std::cout << "loading Ks texture " << mesh_material->map_Ks
+                      << std::endl;
+            mesh_material->Ks_tex =
+                Rasterizer::Texture::loadTGATexture(mesh_material->map_Ks);
+        }
+
+        if (mesh.MeshMaterial.map_Ka.length() > 0) {
+            std::cout << "loading Ka texture " << mesh_material->map_Ka
+                      << std::endl;
+            mesh_material->Ka_tex =
+                Rasterizer::Texture::loadTGATexture(mesh_material->map_Ka);
         }
         for (int i = 0; i < mesh.Indices.size(); i += 3) {
             Rasterizer::Triangle* t = new Rasterizer::Triangle();

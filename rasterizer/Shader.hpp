@@ -14,7 +14,6 @@ struct FragmentShaderPayload {
     Vec3 screen_position;
     Vec3 texture_coord;
     RGBColor color;
-    Texture* texture;
     Material* material;
     Vec3 eye_pos;
     std::vector<Light> lights;

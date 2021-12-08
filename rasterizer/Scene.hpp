@@ -104,13 +104,13 @@ class Scene {
                     // for each triangle, check if pixel is inside
                     Triangle t_tri(t_vertices);
 
-                    this->draw(t_tri, view_pos, mesh->texture, mesh->material);
+                    this->draw(t_tri, view_pos, mesh->material);
                 }
             }
         }
     }
     void draw(const Triangle& triangle, const std::array<Vec3, 3>& view_pos,
-              Texture* tex, Material* material) {
+              Material* material) {
         Vec3 bounding_box[2] = {Vec3(width, height, 0), Vec3(0, 0, 0)};
         for (auto& vertex : triangle.v) {
             float u = vertex.coord.x;
@@ -149,7 +149,6 @@ class Scene {
                             payload.normal = normal;
                             payload.view_position = view_position;
                             payload.screen_position = Vec3(xf, yf, 0.0f);
-                            payload.texture = tex;
                             payload.texture_coord =
                                 triangle.interpolateTextureCoord(alpha, beta,
                                                                  gamma);

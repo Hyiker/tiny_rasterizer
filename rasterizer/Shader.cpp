@@ -6,17 +6,22 @@ RGBColor Rasterizer::normalFragmentShader(FragmentShaderPayload& payload) {
     return color;
 }
 RGBColor Rasterizer::textureFragmentShader(FragmentShaderPayload& payload) {
-    RGBColor texture_color;
-    if (!payload.texture) {
-        texture_color = RGBColor(1.0);
-    } else {
-        texture_color = payload.texture->getRGBBilinear(
-            payload.texture_coord.x, payload.texture_coord.y);
-    }
     // coefficients for ambient, diffuse and specular lighting
-    Vec3 ka = payload.material->Ka;
-    Vec3 kd = payload.texture ? texture_color : payload.material->Kd;
-    Vec3 ks = payload.material->Ks;
+    Vec3 ka = (payload.material->Ka_tex
+                   ? payload.material->Ka_tex->getRGBBilinear(
+                         payload.texture_coord.x, payload.texture_coord.y)
+                   : RGBColor(1.0f)) *
+              payload.material->Ka;
+    Vec3 kd = (payload.material->Kd_tex
+                   ? payload.material->Kd_tex->getRGBBilinear(
+                         payload.texture_coord.x, payload.texture_coord.y)
+                   : RGBColor(1.0f)) *
+              payload.material->Kd;
+    Vec3 ks = (payload.material->Ks_tex
+                   ? payload.material->Ks_tex->getRGBBilinear(
+                         payload.texture_coord.x, payload.texture_coord.y)
+                   : RGBColor(1.0f)) *
+              payload.material->Ks;
     float shiness = payload.material->Ns;
 
     Vec3 eye_vec = (payload.eye_pos - payload.view_position).normalized();
@@ -44,7 +49,7 @@ RGBColor Rasterizer::textureFragmentShader(FragmentShaderPayload& payload) {
         color = color + ambient + diffuse + specular;
     }
 
-    return color.min(texture_color);
+    return color.min(RGBColor(1.0f));
 }
 
 RGBColor Rasterizer::blingphongFragmentShader(FragmentShaderPayload& payload) {
@@ -84,10 +89,10 @@ RGBColor Rasterizer::blingphongFragmentShader(FragmentShaderPayload& payload) {
 }
 RGBColor Rasterizer::textureFragmentShaderNoLight(
     FragmentShaderPayload& payload) {
-    if (!payload.texture) {
+    if (!payload.material->Kd_tex) {
         return RGBColor(1.0);
     }
-    RGBColor texture_color = payload.texture->getRGB(
+    RGBColor texture_color = payload.material->Kd_tex->getRGB(
         payload.texture_coord.x, payload.texture_coord.y,
         Rasterizer::TextureWrapMode::REPEAT);
     // coefficients for ambient, diffuse and specular lighting
