@@ -14,14 +14,17 @@
 #include "rasterizer/Shader.hpp"
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
+#define SSAA_ENABLE
+// #define MSAA_ENABLE
 
 namespace Rasterizer {
 
-static constexpr int SSAA_SAMPLE_RATIO = 2;
-static constexpr int SSAA_SAMPLE_RATIO_SQR =
-    (SSAA_SAMPLE_RATIO * SSAA_SAMPLE_RATIO);
-static constexpr float SSAA_SAMPLE_STEP = (1.f / float(SSAA_SAMPLE_RATIO));
-static constexpr float SSAA_SAMPLE_OFFSET = (0.5f / float(SSAA_SAMPLE_RATIO));
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
+static constexpr int AA_SAMPLE_RATIO = 2;
+static constexpr int AA_SAMPLE_RATIO_SQR = (AA_SAMPLE_RATIO * AA_SAMPLE_RATIO);
+static constexpr float AA_SAMPLE_STEP = (1.f / float(AA_SAMPLE_RATIO));
+static constexpr float AA_SAMPLE_OFFSET = (0.5f / float(AA_SAMPLE_RATIO));
+#endif
 class Scene {
    private:
     // remove triangles unvisible to camera
@@ -38,9 +41,17 @@ class Scene {
     int width;
     int height;
     std::vector<std::vector<RGBColor>> pixels;
-    std::vector<std::vector<std::array<float, SSAA_SAMPLE_RATIO_SQR>>> zbuffer;
-    std::vector<std::vector<std::array<RGBColor, SSAA_SAMPLE_RATIO_SQR>>>
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
+    std::vector<std::vector<std::array<float, AA_SAMPLE_RATIO_SQR>>>
+#else
+    std::vector<std::vector<float>>
+#endif
+        zbuffer;
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
+    std::vector<std::vector<std::array<RGBColor, AA_SAMPLE_RATIO_SQR>>>
         colorbuffer;
+#endif
+
     std::vector<Model*> models;
     std::vector<Light> lights;
     Shader fragment_shader;
@@ -50,19 +61,26 @@ class Scene {
     Scene(int width, int height, Shader fragment_shader = normalFragmentShader)
         : width{width}, height{height}, fragment_shader{fragment_shader} {
         pixels.resize(height);
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
         colorbuffer.resize(height);
+#endif
         zbuffer.resize(height);
         for (int i = 0; i < height; i++) {
             pixels[i].resize(width);
             zbuffer[i].resize(width);
+            std::fill(pixels[i].begin(), pixels[i].end(), RGBColor(0));
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
             colorbuffer[i].resize(width);
-            std::fill(pixels[i].begin(), pixels[i].end(), RGBColor(0, 0, 0));
             for (int j = 0; j < width; j++) {
                 std::fill(zbuffer[i][j].begin(), zbuffer[i][j].end(),
                           std::numeric_limits<float>::infinity());
                 std::fill(colorbuffer[i][j].begin(), colorbuffer[i][j].end(),
                           RGBColor(0.0f));
             }
+#else
+            std::fill(zbuffer[i].begin(), zbuffer[i].end(),
+                      std::numeric_limits<float>::infinity());
+#endif
         }
     }
     void render() {
@@ -127,20 +145,28 @@ class Scene {
         }
         for (int y = bounding_box[0].y; y < bounding_box[1].y; y++) {
             for (int x = bounding_box[0].x; x < bounding_box[1].x; x++) {
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
                 int inside_cnt = 0;
                 RGBColor color(0);
-                for (int i = 0; i < SSAA_SAMPLE_RATIO_SQR; i++) {
-                    float xf = float(x) + SSAA_SAMPLE_OFFSET +
-                               SSAA_SAMPLE_STEP * float(i % SSAA_SAMPLE_RATIO),
-                          yf = float(y) + SSAA_SAMPLE_OFFSET +
-                               SSAA_SAMPLE_STEP * float(i / SSAA_SAMPLE_RATIO);
+                for (int i = 0; i < AA_SAMPLE_RATIO_SQR; i++) {
+                    float xf = float(x) + AA_SAMPLE_OFFSET +
+                               AA_SAMPLE_STEP * float(i % AA_SAMPLE_RATIO),
+                          yf = float(y) + AA_SAMPLE_OFFSET +
+                               AA_SAMPLE_STEP * float(i / AA_SAMPLE_RATIO);
+#else
+                float xf = float(x) + 0.5f, yf = float(y) + 0.5f;
+#endif
+
                     if (triangle.inside(Vec3(xf, yf, 0.0))) {
                         auto [alpha, beta, gamma] =
                             triangle.computeBarycentric2D(xf, yf);
                         float z = triangle.interpolateZ(alpha, beta, gamma);
-
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
                         if (z < zbuffer[y][x][i]) {
                             inside_cnt++;
+#else
+                    if (z < zbuffer[y][x]) {
+#endif
                             Vec3 normal =
                                 triangle.interpolateNormal(alpha, beta, gamma)
                                     .normalized();
@@ -159,15 +185,23 @@ class Scene {
                             payload.eye_pos = cam.eye_pos;
                             payload.lights = this->lights;
                             payload.material = material;
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
                             colorbuffer[y][x][i] = fragment_shader(payload);
                             zbuffer[y][x][i] = z;
+#else
+                        pixels[y][x] = fragment_shader(payload);
+
+                        zbuffer[y][x] = z;
+#endif
                         }
                     }
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
                     color = color + colorbuffer[y][x][i];
                 }
                 if (inside_cnt != 0) {
-                    pixels[y][x] = color / SSAA_SAMPLE_RATIO_SQR;
+                    pixels[y][x] = color / AA_SAMPLE_RATIO_SQR;
                 }
+#endif
             }
         }
     }
@@ -216,13 +250,18 @@ class Scene {
     }
     void clear() {
         for (int i = 0; i < height; i++) {
-            std::fill(pixels[i].begin(), pixels[i].end(), RGBColor(0, 0, 0));
+            std::fill(pixels[i].begin(), pixels[i].end(), RGBColor(0));
+#if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
             for (int j = 0; j < width; j++) {
                 std::fill(zbuffer[i][j].begin(), zbuffer[i][j].end(),
                           std::numeric_limits<float>::infinity());
                 std::fill(colorbuffer[i][j].begin(), colorbuffer[i][j].end(),
                           RGBColor(0.0f));
             }
+#else
+            std::fill(zbuffer[i].begin(), zbuffer[i].end(),
+                      std::numeric_limits<float>::infinity());
+#endif
         }
     }
 };
