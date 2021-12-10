@@ -8,6 +8,10 @@
 #include "rasterizer/Scene.hpp"
 #include "rasterizer/scenes/SceneManager.hpp"
 #include "utils/Measure.hpp"
+#ifdef OMP_ENABLE
+#include <omp.h>
+#endif
+#define DURATION_REFRESH 500
 class Viewer {
    public:
     Rasterizer::Scene* scene;
@@ -19,6 +23,8 @@ class Viewer {
         scene = Rasterizer::SceneManager::getPredefinedSceneByName(scene_name);
     }
     void show() {
+        unsigned long long frames_rendered = 0, time_cost = 0;
+        float fps_avg = 0;
         window_t* wd = window_create(name.c_str(), 800, 800);
         scene->render();
         callbacks_t wd_cb = {0};
@@ -68,8 +74,21 @@ class Viewer {
                 scene->render();
                 window_draw_buffer(wd, scene);
             });
-            std::cout << "\rrender takes " << duration
-                      << "ms, estimated fps: " << 1000.f / float(duration)
+            if (time_cost > DURATION_REFRESH) {
+                fps_avg = float(frames_rendered) * 1000.0f / float(time_cost);
+                time_cost = 0;
+                frames_rendered = 0;
+            }
+            time_cost += duration;
+            frames_rendered++;
+
+            std::cout << "\r"
+#ifdef OMP_ENABLE
+                      << "using " << omp_get_num_procs() << " threads, "
+#endif
+                      << "average fps: " << fps_avg << ";"
+                      << "render takes " << duration
+                      << "ms, immediate fps: " << 1000.f / float(duration)
                       << std::flush;
         }
     }

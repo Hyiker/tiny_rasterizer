@@ -1,5 +1,11 @@
 #ifndef SCENE_H
 #define SCENE_H
+
+#if __has_include(<omp.h>)
+#include <omp.h>
+#define OMP_ENABLE
+#endif
+
 #include <cmath>
 #include <fstream>
 #include <functional>
@@ -99,6 +105,9 @@ class Scene {
             Mat4 norm_mat =
                 (cam.getViewMatrix() * model_matrix).inverse().transpose();
             for (const auto mesh : model->meshes) {
+#ifdef OMP_ENABLE
+#pragma omp parallel for
+#endif
                 for (const auto triangle : mesh->triangles) {
                     std::array<Vertex, 3>& vertices = triangle->v;
                     std::array<Vertex, 3> t_vertices;

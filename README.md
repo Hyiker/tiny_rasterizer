@@ -3,7 +3,7 @@
 
 ## Introduction
 
-This is my own rasterizer implementation. Developed in C++17.
+This is my own rasterizer implementation. Write in C++17, with passion.
 
 ## Usage
 
@@ -27,6 +27,7 @@ This is my own rasterizer implementation. Developed in C++17.
 - [x] Acceleration
     - [x] Arm64 Mat4 Multiplication
     - [x] Back-face culling
+    - [x] OpenMP Parallelism
     - [ ] VFC culling
 - [ ] hard shadow
 - [ ] soft shadow
@@ -37,6 +38,7 @@ This is my own rasterizer implementation. Developed in C++17.
 - [LodePNG](https://github.com/lvandeve/lodepng) Load PNG format texture. (Header Only)
 - [OBJ Loader](https://github.com/Bly7/OBJ-Loader) Load .obj model file (Header Only)
 - [TGA](https://github.com/ColumbusUtrigas/TGA) Load TGA format texture (Header Only)
+- [OpenMP](https://www.openmp.org/) Parallelism acceleration(not essential)
 
 ## Render Samples
 

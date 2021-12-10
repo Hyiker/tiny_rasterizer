@@ -37,9 +37,7 @@ struct SceneManager {
         Scene* scene = new Scene(800, 800, textureFragmentShader);
         Model* model = parseOBJ("assets/rem/Rem.obj");
         scene->addModel(model);
-        scene->addLight(Light(Vec3(20, 20, 20), Vec3(500, 500, 500)));
-        scene->addLight(Light(Vec3(0, 6, 6), Vec3(500, 500, 500)));
-        scene->addLight(Light(Vec3(0, 0, 6), Vec3(500, 500, 500)));
+        scene->addLight(Light(Vec3(0, 3, 3), Vec3(500, 500, 500)));
         scene->setCamera(cam);
         return scene;
     }

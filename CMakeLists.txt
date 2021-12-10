@@ -53,9 +53,11 @@ set(BENCH_SOURCES
     benchmark/BenchMain.cpp
     utils/Measure.cpp
 )
+set(LIBS_PUB)
+set(LIBS_PRI)
 ##################################################
 # ARCHITECTURE SPECIFICATION
-##################################################
+###########################V######################
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(arm64)|(arm32)")
     message("DETECTED ARCHITECTURE " ${CMAKE_SYSTEM_PROCESSOR} ", OPTIMIZING USING NEON")
     set(SOURCES rasterizer/math_arch/MathNeon.cpp ${SOURCES})
@@ -70,6 +72,19 @@ if(APPLE)
 endif()
 
 add_executable(${TARGET} ${HEADERS} ${SOURCES})
+
+##################################################
+# OPENMP PARALLELISM
+###########################V######################
+if(UNIX OR APPLE OR LINUX)
+    message("Unix-like system detected, trying to find OpenMP!")
+    find_package(OpenMP)
+    if(OpenMP_FOUND)
+        set(LIBS_PUB ${LIBS_PUB} OpenMP::OpenMP_CXX)
+    else()
+        message("OpenMP not found!")
+    endif()
+endif()
 
 ##################################################
 # ASSETS
@@ -98,8 +113,9 @@ add_custom_command(
 )
 
 if(APPLE)
-    target_link_libraries(${TARGET} PRIVATE "-framework Cocoa")
+    set(LIBS_PRI ${LIBS_PRI} "-framework Cocoa")
 endif()
+target_link_libraries(${TARGET} PRIVATE ${LIBS_PRI} PUBLIC ${LIBS_PUB})
 
 ##################################################
 # BENCHMARK
