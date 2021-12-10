@@ -26,6 +26,7 @@ This is my own rasterizer implementation. Developed in C++17.
     - [ ] Window
 - [x] Acceleration
     - [x] Arm64 Mat4 Multiplication
+    - [x] Back-face culling
     - [ ] VFC culling
 - [ ] hard shadow
 - [ ] soft shadow
@@ -55,3 +56,4 @@ Display realtime in a window.
 
 - [GAMES101](https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html)
 - [zauonlok's renderer](https://github.com/zauonlok/renderew)
+- Real-Time Rendering by T. Akenine-Möller, E. Haines, N. Hoffman, A. Pesce, M. Iwanicki, S. Hillaire

@@ -27,9 +27,12 @@ static constexpr float AA_SAMPLE_OFFSET = (0.5f / float(AA_SAMPLE_RATIO));
 #endif
 class Scene {
    private:
-    // remove triangles unvisible to camera
-    // TODO: remove by vertices
-    std::vector<Triangle*> triangleExclusion() { return {}; }
+    // if the triangle is backfaced
+    bool backfaceCulling(const Triangle& tri) const {
+        Vec3 a(tri.v[0].coord), b(tri.v[1].coord), c(tri.v[2].coord);
+        float signed_area = (b - a).cross(c - a).z;
+        return signed_area >= 0.f;
+    }
     Mat4 getTransformMatrix() {
         Mat4 proj_mat = cam.getProjectionMatrix();
         Mat4 view_mat = cam.getViewMatrix();
@@ -122,8 +125,8 @@ class Scene {
                     }
                     // for each triangle, check if pixel is inside
                     Triangle t_tri(t_vertices);
-
-                    this->draw(t_tri, view_pos, mesh->material);
+                    if (!backfaceCulling(t_tri))
+                        this->draw(t_tri, view_pos, mesh->material);
                 }
             }
         }
