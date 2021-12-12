@@ -7,6 +7,7 @@ namespace Rasterizer {
 struct Mesh {
     std::vector<Triangle*> triangles;
     Material* material;
+    std::string name;
     Mesh() : material{nullptr} {}
 };
 }  // namespace Rasterizer

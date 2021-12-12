@@ -117,6 +117,12 @@ class Scene {
                                           vertices[i].coord.toVec4(1.0f));
                         Vec3 transformed(transformed4);
                         transformed = transformed / transformed4.w;
+                        if (transformed4.w < 0) {
+                            transformed.x = -transformed.x;
+                            transformed.y = -transformed.y;
+                        } else if (transformed4.w == 0) {
+                            break;
+                        }
 
                         t_vertices[i].coord = std::move(transformed);
                         t_vertices[i].coord.x =
@@ -142,7 +148,11 @@ class Scene {
     }
     void draw(const Triangle& triangle, const std::array<Vec3, 3>& view_pos,
               Material* material) {
-        Vec3 bounding_box[2] = {Vec3(width, height, 0), Vec3(0, 0, 0)};
+        Vec3 bounding_box[2] = {
+            Vec3(std::numeric_limits<float>::infinity(),
+                 std::numeric_limits<float>::infinity(), 0),
+            Vec3(-std::numeric_limits<float>::infinity(),
+                 -std::numeric_limits<float>::infinity(), 0)};
         for (auto& vertex : triangle.v) {
             float u = vertex.coord.x;
             float v = vertex.coord.y;

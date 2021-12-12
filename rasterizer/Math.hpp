@@ -26,6 +26,68 @@ class Vec4 {
     Vec4(float x, float y, float z, float w) : x{x}, y{y}, z{z}, w{w} {}
 };
 
+class Vec3 {
+   public:
+    float x, y, z;
+    Vec3() : x{0.0f}, y{0.0f}, z{0.0f} {}
+    Vec3(float v) : Vec3(v, v, v) {}
+    Vec3(float x, float y, float z) : x{x}, y{y}, z{z} {}
+    Vec3(const Vec4& v4) : x{v4.x}, y{v4.y}, z{v4.z} {}
+    float dot(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
+    Vec3 cross(const Vec3 v) const {
+        return Vec3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
+    }
+    Vec3 operator*(const Vec3& v) const {
+        return Vec3(x * v.x, y * v.y, z * v.z);
+    }
+    inline float norm2() const { return x * x + y * y + z * z; }
+    inline float norm() const { return std::sqrt(x * x + y * y + z * z); }
+    Vec3 normalized() const { return (*this) / this->norm(); }
+    Vec3& normalize() {
+        float n = this->norm();
+        x /= n;
+        y /= n;
+        z /= n;
+        return (*this);
+    }
+    Vec3 operator+(const Vec3& v) const {
+        return Vec3(x + v.x, y + v.y, z + v.z);
+    }
+    Vec3 operator-(const Vec3& v) const {
+        return Vec3(x - v.x, y - v.y, z - v.z);
+    }
+    Vec3 operator-() const { return Vec3(-x, -y, -z); }
+    Vec3& operator=(const Vec4& v4) {
+        x = v4.x;
+        y = v4.y;
+        z = v4.z;
+        return *this;
+    }
+    Vec3 sin() const { return Vec3(std::sin(x), std::sin(y), std::sin(z)); }
+    Vec3 cos() const { return Vec3(std::cos(x), std::cos(y), std::cos(z)); }
+    Vec3 cwiseProduct(const Vec3& v2) const {
+        return Vec3(x * v2.x, y * v2.y, z * v2.z);
+    }
+    Vec3 max(const Vec3 v) const {
+        return Vec3(std::max(v.x, x), std::max(v.y, y), std::max(v.z, z));
+    }
+
+    Vec3 min(const Vec3 v) const {
+        return Vec3(std::min(v.x, x), std::min(v.y, y), std::min(v.z, z));
+    }
+    Vec4 toVec4(float w = 1.0f) const { return Vec4(x, y, z, w); }
+    RGBColor rgbNormalized() const { return (*this) / 255.0f; }
+    RGBColor& rgbNormalize() {
+        x /= 255.0f;
+        y /= 255.0f;
+        z /= 255.0f;
+        return *this;
+    }
+
+    friend Vec3 operator*(float, const Vec3&);
+    friend Vec3 operator*(const Vec3&, float);
+    friend Vec3 operator/(const Vec3&, float);
+};
 class Mat4 {
    private:
     class MatProxy {
@@ -140,68 +202,30 @@ class Mat4 {
         mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
         return std::move(mat);
     }
-};
-class Vec3 {
-   public:
-    float x, y, z;
-    Vec3() : x{0.0f}, y{0.0f}, z{0.0f} {}
-    Vec3(float v) : Vec3(v, v, v) {}
-    Vec3(float x, float y, float z) : x{x}, y{y}, z{z} {}
-    Vec3(const Vec4& v4) : x{v4.x}, y{v4.y}, z{v4.z} {}
-    float dot(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
-    Vec3 cross(const Vec3 v) const {
-        return Vec3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
-    }
-    Vec3 operator*(const Vec3& v) const {
-        return Vec3(x * v.x, y * v.y, z * v.z);
-    }
-    inline float norm2() const { return x * x + y * y + z * z; }
-    inline float norm() const { return std::sqrt(x * x + y * y + z * z); }
-    Vec3 normalized() const { return (*this) / this->norm(); }
-    Vec3& normalize() {
-        float n = this->norm();
-        x /= n;
-        y /= n;
-        z /= n;
-        return (*this);
-    }
-    Vec3 operator+(const Vec3& v) const {
-        return Vec3(x + v.x, y + v.y, z + v.z);
-    }
-    Vec3 operator-(const Vec3& v) const {
-        return Vec3(x - v.x, y - v.y, z - v.z);
-    }
-    Vec3 operator-() const { return Vec3(-x, -y, -z); }
-    Vec3& operator=(const Vec4& v4) {
-        x = v4.x;
-        y = v4.y;
-        z = v4.z;
-        return *this;
-    }
-    Vec3 sin() const { return Vec3(std::sin(x), std::sin(y), std::sin(z)); }
-    Vec3 cos() const { return Vec3(std::cos(x), std::cos(y), std::cos(z)); }
-    Vec3 cwiseProduct(const Vec3& v2) const {
-        return Vec3(x * v2.x, y * v2.y, z * v2.z);
-    }
-    Vec3 max(const Vec3 v) const {
-        return Vec3(std::max(v.x, x), std::max(v.y, y), std::max(v.z, z));
-    }
+    static Mat4 lookAt(const Vec3& eye_pos, const Vec3& target,
+                       const Vec3& up) {
+        Mat4 mat(Mat4::identity());
+        Vec3 z_axis = (eye_pos - target).normalized();
+        Vec3 x_axis = up.cross(z_axis).normalized();
+        Vec3 y_axis = z_axis.cross(x_axis);
 
-    Vec3 min(const Vec3 v) const {
-        return Vec3(std::min(v.x, x), std::min(v.y, y), std::min(v.z, z));
-    }
-    Vec4 toVec4(float w = 1.0f) const { return Vec4(x, y, z, w); }
-    RGBColor rgbNormalized() const { return (*this) / 255.0f; }
-    RGBColor& rgbNormalize() {
-        x /= 255.0f;
-        y /= 255.0f;
-        z /= 255.0f;
-        return *this;
-    }
+        mat.m[0][0] = x_axis.x;
+        mat.m[0][1] = x_axis.y;
+        mat.m[0][2] = x_axis.z;
 
-    friend Vec3 operator*(float, const Vec3&);
-    friend Vec3 operator*(const Vec3&, float);
-    friend Vec3 operator/(const Vec3&, float);
+        mat.m[1][0] = y_axis.x;
+        mat.m[1][1] = y_axis.y;
+        mat.m[1][2] = y_axis.z;
+
+        mat.m[2][0] = z_axis.x;
+        mat.m[2][1] = z_axis.y;
+        mat.m[2][2] = z_axis.z;
+
+        mat.m[0][3] = -x_axis.dot(eye_pos);
+        mat.m[1][3] = -y_axis.dot(eye_pos);
+        mat.m[2][3] = -z_axis.dot(eye_pos);
+        return mat;
+    }
 };
 
 Rasterizer::Vec3 operator*(float coe, const Rasterizer::Vec3& v);

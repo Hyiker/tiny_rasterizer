@@ -14,6 +14,7 @@ include_directories(./)
 set(SOURCES
     rasterizer/Shader.cpp
     rasterizer/Math.cpp
+    rasterizer/scenes/SceneManager.cpp
     lib/tga.cpp
     utils/Measure.cpp
     lib/lodepng.cpp

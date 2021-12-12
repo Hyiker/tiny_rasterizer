@@ -25,7 +25,7 @@ class Viewer {
     void show() {
         unsigned long long frames_rendered = 0, time_cost = 0;
         float fps_avg = 0;
-        window_t* wd = window_create(name.c_str(), 800, 800);
+        window_t* wd = window_create(name.c_str(), scene->width, scene->height);
         scene->render();
         callbacks_t wd_cb = {0};
         wd_cb.sc = 1;

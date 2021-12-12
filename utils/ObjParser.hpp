@@ -21,6 +21,7 @@ Rasterizer::Model* parseOBJ(const std::string& filename) {
     bool loadout = loader.LoadFile(filename);
     for (auto mesh : loader.LoadedMeshes) {
         Rasterizer::Mesh* pm = new Rasterizer::Mesh();
+        pm->name = mesh.MeshName;
         Rasterizer::Material* mesh_material = new Rasterizer::Material();
         mesh_material->name = mesh.MeshMaterial.name;
         mesh_material->illum = mesh.MeshMaterial.illum;

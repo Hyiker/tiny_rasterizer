@@ -107,3 +107,4 @@ build/
 out/
 .VSCodeCounter
 !assets/**
+.DS_Store
