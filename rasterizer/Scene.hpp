@@ -20,7 +20,7 @@
 #include "rasterizer/Shader.hpp"
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
-// #define SSAA_ENABLE
+#define SSAA_ENABLE
 // #define MSAA_ENABLE
 
 namespace Rasterizer {
@@ -88,14 +88,7 @@ class Scene {
         }
     }
     // setup scene, compute light depthmap
-    void sceneSetup() {
-        computeDepthTexture();
-        for (int y = 0; y < height; y++)
-            for (int x = 0; x < width; x++)
-                pixels[y][x] = Vec3(lights[0]->dt->getBilinear(
-                    float(x) / width, 1.f - float(y) / height));
-        dumpToPNG("./depth.png");
-    }
+    void sceneSetup() { computeDepthTexture(); }
     void render() { rasterizeTriangles(); }
     void computeDepthTexture() {
         for (auto& light : lights) {
@@ -268,7 +261,7 @@ class Scene {
                                    gamma * triangle.v[2].coord.z / ws[2];
                         zp *= Z;
 #if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
-                        if (z < zbuffer[y][x][i]) {
+                        if (Z > zbuffer[y][x][i]) {
                             inside_cnt++;
 #else
                     if (Z > zbuffer[y][x]) {
@@ -312,8 +305,9 @@ class Scene {
                             vis = std::min(vis, 1.0f);
 
 #if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
-                            colorbuffer[y][x][i] = Vec3(vis);
-                            zbuffer[y][x][i] = z;
+                            colorbuffer[y][x][i] =
+                                fragment_shader(payload) * vis;
+                            zbuffer[y][x][i] = Z;
 #else
                         pixels[y][x] = fragment_shader(payload) * vis;
 

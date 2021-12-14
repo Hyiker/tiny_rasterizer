@@ -49,7 +49,7 @@ struct Light {
             return 0.0f;
         }
         float nearest_depth = dt->getBilinear(u, v);
-        if (coord.z + 5e-3 > nearest_depth) {
+        if (coord.z + 4e-3 > nearest_depth) {
             return 1.0f;
         } else {
             return 0.0f;
