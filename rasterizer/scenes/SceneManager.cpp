@@ -27,9 +27,11 @@ Scene* SceneManager::getMugScene() {
     Camera cam(45, 1.0f, eye_pos, up, center, 0.01, 50);
     Scene* scene = new Scene(800, 800, textureFragmentShader);
     Model* model = parseOBJ("assets/mug/teamugobj.obj");
+    model->scale(0.3);
     scene->addModel(model);
-    scene->addLight(Light(Vec3(7, 7, 0), Vec3(300, 300, 300)));
+    scene->addLight(new Light(Vec3(7, 7, 0), Vec3(100, 100, 100) * 3));
     scene->setCamera(cam);
+    scene->sceneSetup();
     return scene;
 }
 
@@ -40,8 +42,9 @@ Scene* SceneManager::getShoeScene() {
     Model* model = parseOBJ("assets/shoe/Black_shoe.obj");
     model->scale(0.2);
     scene->addModel(model);
-    scene->addLight(Light(Vec3(20, 20, 20), Vec3(500, 500, 500)));
+    scene->addLight(new Light(Vec3(20, 20, 20), Vec3(500, 500, 500)));
     scene->setCamera(cam);
+    scene->sceneSetup();
     return scene;
 }
 
@@ -51,9 +54,10 @@ Scene* SceneManager::getRemScene() {
     Scene* scene = new Scene(800, 800, textureFragmentShader);
     Model* model = parseOBJ("assets/rem/Rem.obj");
     scene->addModel(model);
-    scene->addLight(Light(Vec3(0, 3, 3), Vec3(500, 500, 500)));
+    scene->addLight(new Light(Vec3(0, 5, 3), Vec3(500, 500, 500)));
     Camera cam(45, float(scene->width) / float(scene->height), eye_pos, up,
                center, 0.1, 50);
     scene->setCamera(cam);
+    scene->sceneSetup();
     return scene;
 }

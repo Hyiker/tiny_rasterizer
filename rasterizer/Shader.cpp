@@ -8,31 +8,31 @@ RGBColor Rasterizer::normalFragmentShader(FragmentShaderPayload& payload) {
 RGBColor Rasterizer::textureFragmentShader(FragmentShaderPayload& payload) {
     // coefficients for ambient, diffuse and specular lighting
     Vec3 ka = (payload.material->Ka_tex
-                   ? payload.material->Ka_tex->getRGBBilinear(
+                   ? payload.material->Ka_tex->getBilinear(
                          payload.texture_coord.x, payload.texture_coord.y)
-                   : RGBColor(1.0f)) *
-              payload.material->Ka;
+                   : RGBColor(1.0f))
+                  .cwiseProduct(payload.material->Ka);
     Vec3 kd = (payload.material->Kd_tex
-                   ? payload.material->Kd_tex->getRGBBilinear(
+                   ? payload.material->Kd_tex->getBilinear(
                          payload.texture_coord.x, payload.texture_coord.y)
-                   : RGBColor(1.0f)) *
-              payload.material->Kd;
+                   : RGBColor(1.0f))
+                  .cwiseProduct(payload.material->Kd);
     Vec3 ks = (payload.material->Ks_tex
-                   ? payload.material->Ks_tex->getRGBBilinear(
+                   ? payload.material->Ks_tex->getBilinear(
                          payload.texture_coord.x, payload.texture_coord.y)
-                   : RGBColor(1.0f)) *
-              payload.material->Ks;
+                   : RGBColor(1.0f))
+                  .cwiseProduct(payload.material->Ks);
     float shiness = payload.material->Ns;
 
     Vec3 eye_vec = (payload.eye_pos - payload.view_position).normalized();
 
     Vec3 ambient_light_intensity(0.01);
     RGBColor color;
-    for (auto& light : payload.lights) {
+    for (auto light : payload.lights) {
         float light_point_dist_sq =
-            (light.position - payload.view_position).norm2();
-        Vec3 light_indensity = light.intensity / light_point_dist_sq;
-        Vec3 light_vec = (light.position - payload.view_position).normalized();
+            (light->position - payload.view_position).norm2();
+        Vec3 light_indensity = light->intensity / light_point_dist_sq;
+        Vec3 light_vec = (light->position - payload.view_position).normalized();
         Vec3 half_vec = (light_vec + eye_vec).normalized();
 
         RGBColor ambient, diffuse, specular;
@@ -66,9 +66,9 @@ RGBColor Rasterizer::blingphongFragmentShader(FragmentShaderPayload& payload) {
     RGBColor color;
     for (auto& light : payload.lights) {
         float light_point_dist_sq =
-            (light.position - payload.view_position).norm2();
-        Vec3 light_indensity = light.intensity / light_point_dist_sq;
-        Vec3 light_vec = (light.position - payload.view_position).normalized();
+            (light->position - payload.view_position).norm2();
+        Vec3 light_indensity = light->intensity / light_point_dist_sq;
+        Vec3 light_vec = (light->position - payload.view_position).normalized();
         Vec3 half_vec = (light_vec + eye_vec).normalized();
 
         RGBColor ambient, diffuse, specular;
@@ -92,7 +92,7 @@ RGBColor Rasterizer::textureFragmentShaderNoLight(
     if (!payload.material->Kd_tex) {
         return RGBColor(1.0);
     }
-    RGBColor texture_color = payload.material->Kd_tex->getRGB(
+    RGBColor texture_color = payload.material->Kd_tex->get(
         payload.texture_coord.x, payload.texture_coord.y,
         Rasterizer::TextureWrapMode::REPEAT);
     // coefficients for ambient, diffuse and specular lighting

@@ -20,7 +20,7 @@
 #include "rasterizer/Shader.hpp"
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
-#define SSAA_ENABLE
+// #define SSAA_ENABLE
 // #define MSAA_ENABLE
 
 namespace Rasterizer {
@@ -38,11 +38,6 @@ class Scene {
         Vec3 a(tri.v[0].coord), b(tri.v[1].coord), c(tri.v[2].coord);
         float signed_area = (b - a).cross(c - a).z;
         return signed_area >= 0.f;
-    }
-    Mat4 getTransformMatrix() {
-        Mat4 proj_mat = cam.getProjectionMatrix();
-        Mat4 view_mat = cam.getViewMatrix();
-        return proj_mat * view_mat;
     }
 
    public:
@@ -62,7 +57,7 @@ class Scene {
 #endif
 
     std::vector<Model*> models;
-    std::vector<Light> lights;
+    std::vector<Light*> lights;
     Shader fragment_shader;
     Scene() = default;
 
@@ -82,18 +77,93 @@ class Scene {
             colorbuffer[i].resize(width);
             for (int j = 0; j < width; j++) {
                 std::fill(zbuffer[i][j].begin(), zbuffer[i][j].end(),
-                          std::numeric_limits<float>::infinity());
+                          -std::numeric_limits<float>::infinity());
                 std::fill(colorbuffer[i][j].begin(), colorbuffer[i][j].end(),
                           RGBColor(0.0f));
             }
 #else
             std::fill(zbuffer[i].begin(), zbuffer[i].end(),
-                      std::numeric_limits<float>::infinity());
+                      -std::numeric_limits<float>::infinity());
 #endif
         }
     }
-    void render() {
-        Mat4 proj_mat = getTransformMatrix();
+    // setup scene, compute light depthmap
+    void sceneSetup() {
+        computeDepthTexture();
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                pixels[y][x] = Vec3(lights[0]->dt->getBilinear(
+                    float(x) / width, 1.f - float(y) / height));
+        dumpToPNG("./depth.png");
+    }
+    void render() { rasterizeTriangles(); }
+    void computeDepthTexture() {
+        for (auto& light : lights) {
+            light->resetDepthTexture();
+            Mat4 mv = light->getVP();
+
+            for (const auto model : models) {
+                Mat4 mvp = mv * model->getModelMatrix();
+                Mat4 cmvp = light->getCorrectionMatrix() * mvp;
+                for (const auto mesh : model->meshes) {
+                    for (const auto triangle : mesh->triangles) {
+                        auto vertices = triangle->v;
+                        std::array<Vertex, 3> t_vertices;
+                        for (int i = 0; i < 3; i++) {
+                            t_vertices[i].coord =
+                                cmvp * vertices[i].coord.toVec4(1.0f);
+                            t_vertices[i].coord.x = DEPTH_TEXTURE_RESOLUTION *
+                                                    t_vertices[i].coord.x;
+                            t_vertices[i].coord.y =
+                                DEPTH_TEXTURE_RESOLUTION *
+                                (1.0f - t_vertices[i].coord.y);
+                        }
+
+                        // for each triangle, check if pixel is inside
+                        Triangle t_tri(t_vertices);
+                        Vec3 bbox[2] = {
+                            Vec3(std::max(
+                                     0.f,
+                                     std::min(std::min(t_vertices[0].coord.x,
+                                                       t_vertices[1].coord.x),
+                                              t_vertices[2].coord.x)),
+                                 std::max(
+                                     0.f,
+                                     std::min(std::min(t_vertices[0].coord.y,
+                                                       t_vertices[1].coord.y),
+                                              t_vertices[2].coord.y)),
+                                 0.0f),
+                            Vec3(std::min(
+                                     float(DEPTH_TEXTURE_RESOLUTION),
+                                     std::max(std::max(t_vertices[0].coord.x,
+                                                       t_vertices[1].coord.x),
+                                              t_vertices[2].coord.x)),
+                                 std::min(
+                                     float(DEPTH_TEXTURE_RESOLUTION),
+                                     std::max(std::max(t_vertices[0].coord.y,
+                                                       t_vertices[1].coord.y),
+                                              t_vertices[2].coord.y)),
+                                 0.0f),
+                        };
+                        for (int y = bbox[0].y; y < bbox[1].y; y++) {
+                            for (int x = bbox[0].x; x < bbox[1].x; x++) {
+                                auto [alpha, beta, gamma] =
+                                    t_tri.computeBarycentric2D(float(x) + 0.5f,
+                                                               float(y) + 0.5f);
+                                float z = 1.f / (alpha / t_tri.v[0].coord.z +
+                                                 beta / t_tri.v[1].coord.z +
+                                                 gamma / t_tri.v[1].coord.z);
+                                light->dt->tex[y][x] =
+                                    std::max(z, light->dt->tex[y][x]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    void rasterizeTriangles() {
+        Mat4 proj_mat = cam.getProjectionMatrix();
         Mat4 view_mat = cam.getViewMatrix();
         float f1 = (cam.far - cam.near) / 2.0f,
               f2 = (cam.far + cam.near) / 2.0f;
@@ -101,9 +171,10 @@ class Scene {
         std::vector<Triangle> transformed_triangles;
         int tcnt = 0;
         for (const auto& model : models) {
-            Mat4 model_matrix = model->getModelMatrix();
+            Mat4 model_mat = model->getModelMatrix();
             Mat4 norm_mat =
-                (cam.getViewMatrix() * model_matrix).inverse().transpose();
+                (cam.getViewMatrix() * model_mat).inverse().transpose();
+            Mat4 mvp = proj_mat * view_mat * model_mat;
             for (const auto mesh : model->meshes) {
 #ifdef OMP_ENABLE
 #pragma omp parallel for
@@ -112,16 +183,20 @@ class Scene {
                     std::array<Vertex, 3>& vertices = triangle->v;
                     std::array<Vertex, 3> t_vertices;
                     std::array<Vec3, 3> view_pos;
+                    std::array<Vec3, 3> world_pos;
+                    std::array<float, 3> ws;
                     for (int i = 0; i < 3; i++) {
-                        Vec4 transformed4(proj_mat * model_matrix *
-                                          vertices[i].coord.toVec4(1.0f));
+                        Vec4 transformed4(mvp * vertices[i].coord.toVec4(1.0f));
                         Vec3 transformed(transformed4);
                         transformed = transformed / transformed4.w;
                         if (transformed4.w < 0) {
                             transformed.x = -transformed.x;
                             transformed.y = -transformed.y;
+                            ws[i] = transformed4.w;
                         } else if (transformed4.w == 0) {
                             break;
+                        } else {
+                            ws[i] = -transformed4.w;
                         }
 
                         t_vertices[i].coord = std::move(transformed);
@@ -135,19 +210,23 @@ class Scene {
                                 .normalized();
                         t_vertices[i].texture_coord = vertices[i].texture_coord;
                         t_vertices[i].color = RGBColor(148, 121, 92);
-                        view_pos[i] = Vec3(view_mat * model_matrix *
+                        view_pos[i] = Vec3(view_mat * model_mat *
                                            vertices[i].coord.toVec4(1.0f));
+                        world_pos[i] =
+                            Vec3(model_mat * vertices[i].coord.toVec4(1.0f));
                     }
                     // for each triangle, check if pixel is inside
                     Triangle t_tri(t_vertices);
                     if (!backfaceCulling(t_tri))
-                        this->draw(t_tri, view_pos, mesh->material);
+                        this->draw(t_tri, view_pos, world_pos, mesh->material,
+                                   ws);
                 }
             }
         }
     }
     void draw(const Triangle& triangle, const std::array<Vec3, 3>& view_pos,
-              Material* material) {
+              const std::array<Vec3, 3>& world_pos, Material* material,
+              const std::array<float, 3>& ws) {
         Vec3 bounding_box[2] = {
             Vec3(std::numeric_limits<float>::infinity(),
                  std::numeric_limits<float>::infinity(), 0),
@@ -182,16 +261,23 @@ class Scene {
                     if (triangle.inside(Vec3(xf, yf, 0.0))) {
                         auto [alpha, beta, gamma] =
                             triangle.computeBarycentric2D(xf, yf);
-                        float z = triangle.interpolateZ(alpha, beta, gamma);
+                        float Z = 1.f / (alpha / ws[0] + beta / ws[1] +
+                                         gamma / ws[2]);
+                        float zp = alpha * triangle.v[0].coord.z / ws[0] +
+                                   beta * triangle.v[1].coord.z / ws[1] +
+                                   gamma * triangle.v[2].coord.z / ws[2];
+                        zp *= Z;
 #if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
                         if (z < zbuffer[y][x][i]) {
                             inside_cnt++;
 #else
-                    if (z < zbuffer[y][x]) {
+                    if (Z > zbuffer[y][x]) {
 #endif
                             Vec3 normal =
-                                triangle.interpolateNormal(alpha, beta, gamma)
-                                    .normalized();
+                                (alpha * triangle.v[0].normal / ws[0] +
+                                 beta * triangle.v[1].normal / ws[1] +
+                                 gamma * triangle.v[2].normal / ws[2]);
+                            normal = (normal * Z).normalized();
                             Vec3 view_position = view_pos[0] * alpha +
                                                  view_pos[1] * beta +
                                                  view_pos[2] * gamma;
@@ -200,20 +286,38 @@ class Scene {
                             payload.view_position = view_position;
                             payload.screen_position = Vec3(xf, yf, 0.0f);
                             payload.texture_coord =
-                                triangle.interpolateTextureCoord(alpha, beta,
-                                                                 gamma);
+                                (alpha * triangle.v[0].texture_coord / ws[0] +
+                                 beta * triangle.v[1].texture_coord / ws[1] +
+                                 gamma * triangle.v[2].texture_coord / ws[2]) *
+                                Z;
                             payload.color =
-                                triangle.interpolateColor(alpha, beta, gamma);
+                                (alpha * triangle.v[0].color / ws[0] +
+                                 beta * triangle.v[1].color / ws[1] +
+                                 gamma * triangle.v[2].color / ws[2]) *
+                                Z;
                             payload.eye_pos = cam.eye_pos;
                             payload.lights = this->lights;
                             payload.material = material;
+                            // visibility from shadow
+                            float vis = 0.f;
+                            Vec3 frag_world_pos =
+                                (alpha * world_pos[0] / ws[0] +
+                                 beta * world_pos[1] / ws[1] +
+                                 gamma * world_pos[2] / ws[2]) *
+                                Z;
+                            for (auto light : lights) {
+                                vis += light->computeVisibility(frag_world_pos,
+                                                                cam.center);
+                            }
+                            vis = std::min(vis, 1.0f);
+
 #if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
-                            colorbuffer[y][x][i] = fragment_shader(payload);
+                            colorbuffer[y][x][i] = Vec3(vis);
                             zbuffer[y][x][i] = z;
 #else
-                        pixels[y][x] = fragment_shader(payload);
+                        pixels[y][x] = fragment_shader(payload) * vis;
 
-                        zbuffer[y][x] = z;
+                        zbuffer[y][x] = Z;
 #endif
                         }
                     }
@@ -229,7 +333,7 @@ class Scene {
     }
     void setCamera(const Camera& cam) { this->cam = cam; }
     void addModel(Model* model) { this->models.emplace_back(model); }
-    void addLight(const Light& light) { this->lights.push_back(light); }
+    void addLight(Light* light) { this->lights.push_back(light); }
     void dumpToPPM(const std::string& path) {
         std::ofstream ofs(path, std::ios::binary);
         ofs.write("P6\n", 3);
@@ -276,13 +380,13 @@ class Scene {
 #if defined(SSAA_ENABLE) || defined(MSAA_ENABLE)
             for (int j = 0; j < width; j++) {
                 std::fill(zbuffer[i][j].begin(), zbuffer[i][j].end(),
-                          std::numeric_limits<float>::infinity());
+                          -std::numeric_limits<float>::infinity());
                 std::fill(colorbuffer[i][j].begin(), colorbuffer[i][j].end(),
                           RGBColor(0.0f));
             }
 #else
             std::fill(zbuffer[i].begin(), zbuffer[i].end(),
-                      std::numeric_limits<float>::infinity());
+                      -std::numeric_limits<float>::infinity());
 #endif
         }
     }

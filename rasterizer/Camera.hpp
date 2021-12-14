@@ -23,13 +23,7 @@ class Camera {
           near{near},
           far{far} {}
     Mat4 getProjectionMatrix() {
-        Mat4 projection;
-        float z_rng = far - near;
-        float tan_fov_2 = std::tan(fov / 2.f);
-        projection << 1.0f / (aspect_ratio * tan_fov_2), 0, 0, 0, 0,
-            1 / tan_fov_2, 0, 0, 0, 0, -(far + near) / (far - near),
-            -2.f * far * near / (far - near), 0, 0, -1, 0;
-        return projection;
+        return Mat4::persp(near, far, fov, aspect_ratio);
     }
     Mat4 getViewMatrix() { return Mat4::lookAt(eye_pos, center, up); }
 };

@@ -60,10 +60,7 @@ class Viewer {
                 case KEY_NUM:
                     break;
             }
-            for (int i = 0; i < scene->models.size(); i++) {
-                scene->models[i]->transform =
-                    rotation * scene->models[i]->transform;
-            }
+            scene->cam.eye_pos = rotation * scene->cam.eye_pos.toVec4(1.0f);
 
             scene->clear();
         };

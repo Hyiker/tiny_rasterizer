@@ -16,7 +16,7 @@ struct FragmentShaderPayload {
     RGBColor color;
     Material* material;
     Vec3 eye_pos;
-    std::vector<Light> lights;
+    std::vector<Light*> lights;
 };
 using Shader = std::function<RGBColor(FragmentShaderPayload&)>;
 RGBColor normalFragmentShader(FragmentShaderPayload& payload);

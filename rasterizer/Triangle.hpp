@@ -57,23 +57,6 @@ class Triangle {
         float c3 = 1.0f - c1 - c2;
         return {c1, c2, c3};
     }
-    float interpolateZ(float u, float v, float w) const {
-        return this->v[0].coord.z * u + this->v[1].coord.z * v +
-               this->v[2].coord.z * w;
-    }
-    Vec3 interpolateNormal(float u, float v, float w) const {
-        return this->v[0].normal * u + this->v[1].normal * v +
-               this->v[2].normal * w;
-    }
-
-    Vec3 interpolateTextureCoord(float u, float v, float w) const {
-        return this->v[0].texture_coord * u + this->v[1].texture_coord * v +
-               this->v[2].texture_coord * w;
-    }
-    RGBColor interpolateColor(float u, float v, float w) const {
-        return this->v[0].color * u + this->v[1].color * v +
-               this->v[2].color * w;
-    }
 };
 
 }  // namespace Rasterizer

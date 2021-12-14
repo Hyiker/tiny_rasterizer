@@ -23,6 +23,7 @@ class Vec4 {
    public:
     float x, y, z, w;
     Vec4() : x{0.0f}, y{0.0f}, z{0.0f}, w{0.0f} {};
+    Vec4(float v) : x{v}, y{v}, z{v}, w{v} {};
     Vec4(float x, float y, float z, float w) : x{x}, y{y}, z{z}, w{w} {}
 };
 
@@ -36,9 +37,6 @@ class Vec3 {
     float dot(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
     Vec3 cross(const Vec3 v) const {
         return Vec3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
-    }
-    Vec3 operator*(const Vec3& v) const {
-        return Vec3(x * v.x, y * v.y, z * v.z);
     }
     inline float norm2() const { return x * x + y * y + z * z; }
     inline float norm() const { return std::sqrt(x * x + y * y + z * z); }
@@ -202,6 +200,26 @@ class Mat4 {
         mat << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
         return std::move(mat);
     }
+    static Mat4 ortho(float near, float far, float lrtb = 1.0f) {
+        Mat4 mat(Mat4::identity());
+        near = -near;
+        far = -far;
+        mat.m[0][0] = 1.0f / lrtb;
+        mat.m[1][1] = 1.0f / lrtb;
+        mat.m[2][2] = 2 / (near - far);
+        mat.m[2][3] = -(near + far) / (near - far);
+        return mat;
+    }
+    static Mat4 persp(float near, float far, float fov, float aspect_ratio) {
+        Mat4 projection;
+        float z_rng = far - near;
+        float tan_fov_2 = std::tan(fov / 2.f);
+        projection << 1.0f / (aspect_ratio * tan_fov_2), 0, 0, 0, 0,
+            1 / tan_fov_2, 0, 0, 0, 0, -(far + near) / (far - near),
+            -2.f * far * near / (far - near), 0, 0, -1, 0;
+        return projection;
+    }
+
     static Mat4 lookAt(const Vec3& eye_pos, const Vec3& target,
                        const Vec3& up) {
         Mat4 mat(Mat4::identity());
@@ -239,12 +257,17 @@ std::ostream& operator<<(std::ostream& os, const Rasterizer::Mat4& mat);
 
 namespace math {
 template <typename T>
-T clamp(T val, T f, T c) {
+inline T clamp(T val, T f, T c) {
     return std::max(f, std::min(val, c));
 }
 template <typename T>
-T lerp(float r, T v0, T v1) {
+inline T lerp(float r, T v0, T v1) {
     return r * v0 + (1.0f - r) * v1;
+}
+template <typename T>
+inline T interpolate(const std::array<T, 3>& arr, float alpha, float beta,
+                     float gamma) {
+    return alpha * arr[0] + beta * arr[1] + gamma * arr[2];
 }
 }  // namespace math
 #endif /* MATH_H */

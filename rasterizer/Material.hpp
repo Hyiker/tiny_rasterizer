@@ -43,9 +43,9 @@ struct Material {
     std::string map_d;
     // Bump Map
     std::string map_bump;
-    Texture* Ka_tex;
-    Texture* Kd_tex;
-    Texture* Ks_tex;
+    RGBTexture* Ka_tex;
+    RGBTexture* Kd_tex;
+    RGBTexture* Ks_tex;
 };
 }  // namespace Rasterizer
 
