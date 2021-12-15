@@ -91,7 +91,7 @@ class Scene {
     // setup scene, compute light depthmap
     void sceneSetup() {
         computeDepthTexture();
-        if (lights.size() >= 1)
+        if (lights.size() >= 1) {
 #ifdef DUMP_DEPTHMAP
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
@@ -99,8 +99,9 @@ class Scene {
                         float(j) / width, 1.f - float(i) / height));
                 }
             }
-        dumpToPNG("./depth.png");
+            dumpToPNG("./depth.png");
 #endif
+        }
     }
     void render() { rasterizeTriangles(); }
     void computeDepthTexture() {
