@@ -21,6 +21,7 @@
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
 #define SSAA_ENABLE
+// #define DUMP_DEPTHMAP
 // #define MSAA_ENABLE
 
 namespace Rasterizer {
@@ -88,7 +89,19 @@ class Scene {
         }
     }
     // setup scene, compute light depthmap
-    void sceneSetup() { computeDepthTexture(); }
+    void sceneSetup() {
+        computeDepthTexture();
+        if (lights.size() >= 1)
+#ifdef DUMP_DEPTHMAP
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    pixels[i][j] = Vec3(lights[0]->dt->getBilinear(
+                        float(j) / width, 1.f - float(i) / height));
+                }
+            }
+        dumpToPNG("./depth.png");
+#endif
+    }
     void render() { rasterizeTriangles(); }
     void computeDepthTexture() {
         for (auto& light : lights) {

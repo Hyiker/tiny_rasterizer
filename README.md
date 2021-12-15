@@ -29,7 +29,7 @@ This is my own rasterizer implementation. Write in C++17, with passion.
     - [x] Back-face culling
     - [x] OpenMP Parallelism
     - [ ] VFC culling
-- [ ] hard shadow
+- [x] hard shadow
 - [ ] soft shadow
 - [ ] shader language support(Optional)
 

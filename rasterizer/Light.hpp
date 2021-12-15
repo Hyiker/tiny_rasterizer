@@ -4,9 +4,9 @@
 #include "rasterizer/Math.hpp"
 #include "rasterizer/Texture.hpp"
 namespace Rasterizer {
-constexpr unsigned int DEPTH_TEXTURE_RESOLUTION = 1024;
+constexpr unsigned int DEPTH_TEXTURE_RESOLUTION = 1024 * 10;
 constexpr float LIGHT_NEAR = 1e-2;
-constexpr float LIGHT_FAR = 30;
+constexpr float LIGHT_FAR = 50;
 constexpr float LIGHT_LRTB = 8.0f;
 struct Light {
     Vec3 position;
@@ -46,10 +46,10 @@ struct Light {
         // NDC to uv space
         float u = coord.x, v = coord.y;
         if (u > 1.0f || u < 0.f || v > 1.0f || v < 0.f) {
-            return 0.0f;
+            return 1.0f;
         }
         float nearest_depth = dt->getBilinear(u, v);
-        if (coord.z + 4e-3 > nearest_depth) {
+        if (coord.z + EPSILON > nearest_depth) {
             return 1.0f;
         } else {
             return 0.0f;
