@@ -5,7 +5,7 @@ if(APPLE)
     set(CMAKE_CXX_COMPILER /usr/bin/clang++)
     set(LANG ${LANG} OBJCXX)
 endif()
-project(tiny_rasterizer VERSION 0.0.1 LANGUAGES ${LANG})
+project(tiny_rasterizer VERSION 0.0.2 LANGUAGES ${LANG})
 
 set(CMAKE_CXX_STANDARD 17)
 set(TARGET rasterizer)
