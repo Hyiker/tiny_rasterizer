@@ -3,7 +3,7 @@
 
 ## Introduction
 
-This is my own rasterizer implementation. Write in C++17, with passion.
+This is my own rasterizer implementation using minimum dependencies(header only as much as possible). Write in C++17, with passion.
 
 ## Usage
 
@@ -29,7 +29,7 @@ This is my own rasterizer implementation. Write in C++17, with passion.
     - [x] Back-face culling
     - [x] OpenMP Parallelism
     - [ ] VFC culling
-- [x] hard shadow
+- [x] hard shadow(PCF implemented)
 - [ ] soft shadow
 - [ ] shader language support(Optional)
 

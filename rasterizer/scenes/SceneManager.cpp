@@ -42,7 +42,7 @@ Scene* SceneManager::getShoeScene() {
     Model* model = parseOBJ("assets/shoe/Black_shoe.obj");
     model->scale(0.2);
     scene->addModel(model);
-    scene->addLight(new Light(Vec3(20, 20, 20), Vec3(500, 500, 500)));
+    scene->addLight(new Light(Vec3(20, 20, 20), Vec3(500, 500, 500) * 1.5));
     scene->setCamera(cam);
     scene->sceneSetup();
     return scene;

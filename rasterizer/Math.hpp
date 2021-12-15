@@ -256,6 +256,8 @@ std::ostream& operator<<(std::ostream& os, const Rasterizer::Mat4& mat);
 }  // namespace Rasterizer
 
 namespace math {
+static constexpr float M_PI2 = M_PI * 2.f;
+
 template <typename T>
 inline T clamp(T val, T f, T c) {
     return std::max(f, std::min(val, c));
@@ -268,6 +270,32 @@ template <typename T>
 inline T interpolate(const std::array<T, 3>& arr, float alpha, float beta,
                      float gamma) {
     return alpha * arr[0] + beta * arr[1] + gamma * arr[2];
+}
+static float rand_2to1(const Rasterizer::Vec3& uv) {
+    // 0 - 1
+    constexpr float a = 12.9898, b = 78.233, c = 43758.5453;
+    float dt = uv.x * a + uv.y * b, sn = std::fmod(dt, M_PI);
+    float _;
+    return std::modf(std::sin(sn) * c, &_);
+}
+template <int num_samples = 16, int num_rings = 10>
+inline void poissonDiskSamples(
+    std::array<Rasterizer::Vec3, num_samples>& poisson_disk,
+    const Rasterizer::Vec3& seed) {
+    constexpr float ANGLE_STEP = M_PI2 * float(num_rings) / float(num_samples);
+    constexpr float inv_num_samples = 1.0 / float(num_samples);
+
+    float angle = rand_2to1(seed) * M_PI2;
+    float radius = inv_num_samples;
+    float radiusStep = radius;
+
+    for (int i = 0; i < num_samples; i++) {
+        poisson_disk[i] =
+            Rasterizer::Vec3(std::cos(angle), std::sin(angle), 0.f) *
+            std::pow(radius, 0.75);
+        radius += radiusStep;
+        angle += ANGLE_STEP;
+    }
 }
 }  // namespace math
 #endif /* MATH_H */

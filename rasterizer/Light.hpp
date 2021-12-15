@@ -3,11 +3,14 @@
 
 #include "rasterizer/Math.hpp"
 #include "rasterizer/Texture.hpp"
+
 namespace Rasterizer {
 constexpr unsigned int DEPTH_TEXTURE_RESOLUTION = 1024 * 10;
 constexpr float LIGHT_NEAR = 1e-2;
 constexpr float LIGHT_FAR = 50;
 constexpr float LIGHT_LRTB = 8.0f;
+static constexpr uint32_t NUM_SAMPLES = 16;
+static constexpr float INV_NUM_SAMPLES = 1.f / float(NUM_SAMPLES);
 struct Light {
     Vec3 position;
     Vec3 intensity;
@@ -37,23 +40,46 @@ struct Light {
         return Mat4::ortho(LIGHT_NEAR, LIGHT_FAR, LIGHT_LRTB) *
                Mat4::lookAt(position, focal, up);
     }
-    float computeVisibility(const Vec3& world_coord, const Vec3& target) const {
-        Vec3 coord = this->getCorrectionMatrix() * this->getVP() *
-                     world_coord.toVec4(1.0f);
+    float plainShadowMap(const Vec3& depth_coord) const {
         if (!dt) {
             return 1.0f;
         }
         // NDC to uv space
-        float u = coord.x, v = coord.y;
+        float u = depth_coord.x, v = depth_coord.y;
         if (u > 1.0f || u < 0.f || v > 1.0f || v < 0.f) {
-            return 1.0f;
+            return 0.0f;
         }
         float nearest_depth = dt->getBilinear(u, v);
-        if (coord.z + EPSILON > nearest_depth) {
+        if (depth_coord.z + EPSILON > nearest_depth) {
             return 1.0f;
         } else {
             return 0.0f;
         }
+    }
+
+    float PCFShadowMap(const Vec3& depth_coord) const {
+        std::array<Vec3, NUM_SAMPLES> poisson_disk;
+        math::poissonDiskSamples<NUM_SAMPLES, 10>(poisson_disk, depth_coord);
+        float filter_scale = 0.0125f;
+        float visibility = 0.0f;
+        for (int i = 0; i < NUM_SAMPLES; i++) {
+            float u = depth_coord.x + poisson_disk[i].x * filter_scale,
+                  v = depth_coord.y + poisson_disk[i].y * filter_scale;
+            if (u > 1.0f || u < 0.f || v > 1.0f || v < 0.f) {
+                visibility += 0.0f;
+                continue;
+            }
+            float nearest_depth = dt->getBilinear(u, v);
+            if (depth_coord.z + EPSILON > nearest_depth) {
+                visibility += 1.f;
+            }
+        }
+        return visibility * INV_NUM_SAMPLES;
+    }
+    float computeVisibility(const Vec3& world_coord) const {
+        Vec3 coord = this->getCorrectionMatrix() * this->getVP() *
+                     world_coord.toVec4(1.0f);
+        return PCFShadowMap(coord);
     }
 };
 }  // namespace Rasterizer

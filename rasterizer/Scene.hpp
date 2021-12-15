@@ -20,7 +20,7 @@
 #include "rasterizer/Shader.hpp"
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
-#define SSAA_ENABLE
+// #define SSAA_ENABLE
 // #define DUMP_DEPTHMAP
 // #define MSAA_ENABLE
 
@@ -313,8 +313,7 @@ class Scene {
                                  gamma * world_pos[2] / ws[2]) *
                                 Z;
                             for (auto light : lights) {
-                                vis += light->computeVisibility(frag_world_pos,
-                                                                cam.center);
+                                vis += light->computeVisibility(frag_world_pos);
                             }
                             vis = std::min(vis, 1.0f);
 
