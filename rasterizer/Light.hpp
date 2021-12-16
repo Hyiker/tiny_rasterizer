@@ -60,7 +60,7 @@ struct Light {
     float PCFShadowMap(const Vec3& depth_coord) const {
         std::array<Vec3, NUM_SAMPLES> poisson_disk;
         math::poissonDiskSamples<NUM_SAMPLES, 10>(poisson_disk, depth_coord);
-        float filter_scale = 0.0125f;
+        float filter_scale = 0.00125f;
         float visibility = 0.0f;
         for (int i = 0; i < NUM_SAMPLES; i++) {
             float u = depth_coord.x + poisson_disk[i].x * filter_scale,

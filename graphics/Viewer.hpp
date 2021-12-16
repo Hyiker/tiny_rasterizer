@@ -79,7 +79,7 @@ class Viewer {
             time_cost += duration;
             frames_rendered++;
 
-            std::cout << "\r"
+            std::cout << "\r" << scene->cam.eye_pos
 #ifdef OMP_ENABLE
                       << "using " << omp_get_num_procs() << " threads, "
 #endif

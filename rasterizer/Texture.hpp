@@ -1,5 +1,5 @@
-#ifndef TEXTURE_HPP
-#define TEXTURE_HPP
+#ifndef TEXTURE_H
+#define TEXTURE_H
 #include <iostream>
 #include <vector>
 
@@ -122,9 +122,9 @@ class RGBTexture : public Texture<RGBColor> {
                     for (int x = 0; x < texture->width; x++) {
                         int p_start = y * texture->width * 3 + x * 3;
                         texture->tex[texture->height - y - 1][x] =
-                            RGBAColor(tga_pixels[p_start],
-                                      tga_pixels[p_start + 1],
-                                      tga_pixels[p_start + 2], 1.0f) /
+                            RGBColor(tga_pixels[p_start],
+                                     tga_pixels[p_start + 1],
+                                     tga_pixels[p_start + 2]) /
                             255.0f;
                     }
                 }
@@ -148,4 +148,4 @@ class DepthTexture : public Texture<float> {
 };
 
 }  // namespace Rasterizer
-#endif /* TEXTURE_HPP */
+#endif /* TEXTURE_H */

@@ -6,9 +6,6 @@ namespace Rasterizer {
 
 namespace SceneManager {
 Scene* getPredefinedSceneByName(const std::string& name);
-Scene* getMugScene();
-Scene* getShoeScene();
-Scene* getRemScene();
 }  // namespace SceneManager
 }  // namespace Rasterizer
 

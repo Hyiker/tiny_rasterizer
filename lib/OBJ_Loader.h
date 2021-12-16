@@ -38,7 +38,7 @@
 #include <math.h>
 
 // Print progress to console while loading (large models)
-#define OBJL_CONSOLE_OUTPUT
+// #define OBJL_CONSOLE_OUTPUT
 
 // Namespace: OBJL
 //
@@ -368,7 +368,13 @@ inline std::string firstToken(const std::string& in) {
 // Get element at given index position
 template <class T>
 inline const T& getElement(const std::vector<T>& elements, std::string& index) {
-    int idx = std::stoi(index);
+    int idx;
+    try {
+        idx = std::stoi(index);
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "bad index: " << index << '\n' << std::endl;
+        exit(1);
+    }
     if (idx < 0)
         idx = int(elements.size()) + idx;
     else

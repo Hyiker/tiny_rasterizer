@@ -32,25 +32,42 @@ Rasterizer::Model* parseOBJ(const std::string& filename) {
         mesh_material->Ni = mesh.MeshMaterial.Ni;
         mesh_material->d = mesh.MeshMaterial.d;
         mesh_material->map_Kd = mesh.MeshMaterial.map_Kd;
+        mesh_material->map_Ks = mesh.MeshMaterial.map_Ks;
+        mesh_material->map_Ka = mesh.MeshMaterial.map_Ka;
         if (mesh.MeshMaterial.map_Kd.length() > 0) {
             std::cout << "loading Kd texture " << mesh_material->map_Kd
                       << std::endl;
-            mesh_material->Kd_tex =
-                Rasterizer::RGBTexture::loadTGATexture(mesh_material->map_Kd);
+            if (mesh.MeshMaterial.map_Kd.substr(
+                    mesh.MeshMaterial.map_Kd.length() - 3, 3) == "tga")
+                mesh_material->Kd_tex = Rasterizer::RGBTexture::loadTGATexture(
+                    mesh_material->map_Kd);
+            else
+                mesh_material->Kd_tex = Rasterizer::RGBTexture::loadPNGTexture(
+                    mesh_material->map_Kd);
         }
 
         if (mesh.MeshMaterial.map_Ks.length() > 0) {
             std::cout << "loading Ks texture " << mesh_material->map_Ks
                       << std::endl;
-            mesh_material->Ks_tex =
-                Rasterizer::RGBTexture::loadTGATexture(mesh_material->map_Ks);
+            if (mesh.MeshMaterial.map_Ks.substr(
+                    mesh.MeshMaterial.map_Ks.length() - 3, 3) == "tga")
+                mesh_material->Ks_tex = Rasterizer::RGBTexture::loadTGATexture(
+                    mesh_material->map_Ks);
+            else
+                mesh_material->Ks_tex = Rasterizer::RGBTexture::loadPNGTexture(
+                    mesh_material->map_Ks);
         }
 
         if (mesh.MeshMaterial.map_Ka.length() > 0) {
             std::cout << "loading Ka texture " << mesh_material->map_Ka
                       << std::endl;
-            mesh_material->Ka_tex =
-                Rasterizer::RGBTexture::loadTGATexture(mesh_material->map_Ka);
+            if (mesh.MeshMaterial.map_Ka.substr(
+                    mesh.MeshMaterial.map_Ka.length() - 3, 3) == "tga")
+                mesh_material->Ka_tex = Rasterizer::RGBTexture::loadTGATexture(
+                    mesh_material->map_Ka);
+            else
+                mesh_material->Ka_tex = Rasterizer::RGBTexture::loadPNGTexture(
+                    mesh_material->map_Ka);
         }
         for (int i = 0; i < mesh.Indices.size(); i += 3) {
             Rasterizer::Triangle* t = new Rasterizer::Triangle();
