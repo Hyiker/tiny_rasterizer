@@ -28,9 +28,8 @@ This is my own rasterizer implementation using minimum dependencies(header only 
     - [x] Arm64 Mat4 Multiplication
     - [x] Back-face culling
     - [x] OpenMP Parallelism
-    - [ ] VFC culling
 - [x] hard shadow(PCF implemented)
-- [ ] soft shadow
+- [x] soft shadow
 - [ ] shader language support(Optional)
 
 ## Dependencies
