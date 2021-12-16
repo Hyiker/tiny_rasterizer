@@ -20,7 +20,7 @@
 #include "rasterizer/Shader.hpp"
 #include "rasterizer/Texture.hpp"
 #include "rasterizer/Triangle.hpp"
-// #define SSAA_ENABLE
+#define SSAA_ENABLE
 // #define DUMP_DEPTHMAP
 // #define MSAA_ENABLE
 
@@ -280,10 +280,9 @@ class Scene {
 #else
                     if (Z > zbuffer[y][x]) {
 #endif
-                            Vec3 normal =
-                                (alpha * triangle.v[0].normal / ws[0] +
-                                 beta * triangle.v[1].normal / ws[1] +
-                                 gamma * triangle.v[2].normal / ws[2]);
+                            Vec3 normal = alpha * triangle.v[0].normal / ws[0] +
+                                          beta * triangle.v[1].normal / ws[1] +
+                                          gamma * triangle.v[2].normal / ws[2];
                             normal = (normal * Z).normalized();
                             Vec3 view_position = view_pos[0] * alpha +
                                                  view_pos[1] * beta +
@@ -306,7 +305,7 @@ class Scene {
                             payload.lights = this->lights;
                             payload.material = material;
                             // visibility from shadow
-                            float vis = 0.f;
+                            float vis = lights.size() == 0 ? 1.f : 0.f;
                             Vec3 frag_world_pos =
                                 (alpha * world_pos[0] / ws[0] +
                                  beta * world_pos[1] / ws[1] +

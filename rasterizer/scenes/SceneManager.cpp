@@ -39,11 +39,10 @@ static Scene* getMugScene() {
 static Scene* getShoeScene() {
     Vec3 eye_pos(0, 6, 6), up(0, 1, 0), center(0, 0, 0);
     Camera cam(45, 1.0f, eye_pos, up, center, 0.1, 30);
-    Scene* scene = new Scene(800, 800, textureFragmentShader);
+    Scene* scene = new Scene(800, 800, normalFragmentShader);
     Model* model = parseOBJ("assets/shoe/Black_shoe.obj");
     model->scale(0.2);
     scene->addModel(model);
-    scene->addLight(new Light(Vec3(20, 20, 20), Vec3(500, 500, 500) * 1.5));
     scene->setCamera(cam);
     scene->sceneSetup();
     return scene;
