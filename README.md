@@ -3,7 +3,7 @@
 
 ## Introduction
 
-This is my own rasterizer implementation using minimum dependencies(header only as much as possible). Write in C++17, with passion.
+This is my own rasterizer implementation using minimum dependencies(header only as much as possible). Write in C++17, with passion. This repo is archieved for I'm planning to **remaster** it in the future.
 
 ## Usage
 
